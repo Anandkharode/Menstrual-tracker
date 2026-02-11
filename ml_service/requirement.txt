@@ -1,0 +1,3 @@
+Flask==2.3.2
+numpy==1.25.3
+# tensorflow==2.14.0  # optional - heavy, install if you actually train
