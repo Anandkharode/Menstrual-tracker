@@ -1,53 +1,64 @@
-import numpy as np
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Input
-from sklearn.preprocessing import MinMaxScaler
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+from sklearn.preprocessing import LabelEncoder
+import joblib
 
 # -------------------------------
-# 1. TRAINING DATA
+# LOAD DATA
 # -------------------------------
-X_raw = np.array([
-    [28, 29, 27, 28, 28],
-    [30, 31, 29, 30, 31],
-    [27, 28, 27, 26, 28],
-    [29, 30, 29, 30, 31],
-    [28, 28, 29, 28, 29],
-    [31, 32, 30, 31, 32]
-])
-
-y_raw = np.array([28, 32, 27, 31, 29, 33])
+data = pd.read_csv("data_with_factors/menstrual_cycle_dataset_with_factors.csv")
 
 # -------------------------------
-# 2. NORMALIZE
+# DROP USELESS COLUMNS
 # -------------------------------
-scaler_X = MinMaxScaler()
-scaler_y = MinMaxScaler()
+data = data.drop(columns=['User ID', 'Cycle Start Date', 'Next Cycle Start Date'])
 
-X_scaled = scaler_X.fit_transform(X_raw)
-y_scaled = scaler_y.fit_transform(y_raw.reshape(-1, 1))
-
-X = X_scaled.reshape(X_scaled.shape[0], 5, 1)
-y = y_scaled
+# DEBUG PRINT
+print("Before encoding:")
+print(data.head())
 
 # -------------------------------
-# 3. BUILD MODEL
+# CONVERT ALL TEXT TO NUMBERS
 # -------------------------------
-model = Sequential([
-    Input(shape=(5, 1)),
-    LSTM(32),
-    Dense(1)
-])
+for col in data.columns:
+    try:
+        data[col] = pd.to_numeric(data[col])
+    except:
+        le = LabelEncoder()
+        data[col] = le.fit_transform(data[col])
 
-model.compile(optimizer="adam", loss="mse")
-
-# -------------------------------
-# 4. TRAIN MODEL  ✅ ADD HERE
-# -------------------------------
-model.fit(X, y, epochs=300, verbose=1)
+# DEBUG PRINT
+print("After encoding:")
+print(data.head())
 
 # -------------------------------
-# 5. SAVE MODEL  ✅ ADD HERE
+# FEATURES & TARGET
 # -------------------------------
-model.save("cycle_lstm_model.h5")
+X = data.drop("Cycle Length", axis=1)
+y = data["Cycle Length"]
 
-print("✅ Model trained and saved as cycle_lstm_model.h5")
+# -------------------------------
+# ✅ ANOMALY LABEL BANANA
+# Agar cycle < 21 ya > 35 days → anomaly = 1
+# -------------------------------
+anomaly_y = ((y < 21) | (y > 35)).astype(int)
+print(f"\n🔍 Anomaly cases: {anomaly_y.sum()} / {len(anomaly_y)}")
+
+# -------------------------------
+# TRAIN — Cycle Length Model
+# -------------------------------
+model = RandomForestRegressor(n_estimators=100, random_state=42)
+model.fit(X, y)
+joblib.dump(model, "cycle_model.pkl")
+print("✅ cycle_model.pkl saved!")
+
+# -------------------------------
+# TRAIN — Anomaly Detection Model
+# -------------------------------
+anomaly_model = RandomForestClassifier(n_estimators=100, random_state=42)
+anomaly_model.fit(X, anomaly_y)
+joblib.dump(anomaly_model, "anomaly_model.pkl")
+print("✅ anomaly_model.pkl saved!")
+
+print("\n🚀 Done! Ab python app.py run karo")
