@@ -1,0 +1,1963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Health Assistant</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0d0a14;--surface:#16111f;--surface2:#1e1729;
+  --border:rgba(255,255,255,0.07);
+  --rose:#e8617a;--rose-soft:rgba(232,97,122,0.15);
+  --lavender:#9b7fe8;--lavender-soft:rgba(155,127,232,0.15);
+  --teal:#4ecdc4;--teal-soft:rgba(78,205,196,0.12);
+  --amber:#f4a261;--amber-soft:rgba(244,162,97,0.12);
+  --text:#f0eaf8;--text-muted:rgba(240,234,248,0.45);--text-dim:rgba(240,234,248,0.25);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;top:-200px;left:-200px;width:600px;height:600px;background:radial-gradient(circle,rgba(155,127,232,0.08) 0%,transparent 70%);pointer-events:none;z-index:0;}
+body::after{content:'';position:fixed;bottom:-100px;right:-100px;width:500px;height:500px;background:radial-gradient(circle,rgba(232,97,122,0.07) 0%,transparent 70%);pointer-events:none;z-index:0;}
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh;position:relative;z-index:1;}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:32px 20px;display:flex;flex-direction:column;gap:8px;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.logo{display:flex;align-items:center;gap:10px;padding:0 8px 28px;border-bottom:1px solid var(--border);margin-bottom:8px;}
+.logo-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--rose),var(--lavender));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.logo-text{font-family:'Playfair Display',serif;font-size:22px;letter-spacing:-0.5px;background:linear-gradient(135deg,#f0eaf8,var(--lavender));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;cursor:pointer;color:var(--text-muted);font-size:14px;font-weight:400;transition:all 0.2s;text-decoration:none;border:none;background:none;width:100%;font-family:'DM Sans',sans-serif;}
+.nav-item:hover{background:rgba(255,255,255,0.04);color:var(--text);}
+.nav-item.active{background:var(--lavender-soft);color:var(--lavender);font-weight:500;}
+.nav-icon{font-size:17px;width:20px;text-align:center;flex-shrink:0;}
+.nav-section{font-size:10px;font-weight:500;letter-spacing:1.2px;color:var(--text-dim);text-transform:uppercase;padding:16px 12px 6px;}
+.notif-dot{width:7px;height:7px;border-radius:50%;background:var(--rose);margin-left:auto;animation:pulse 2s infinite;}
+.sidebar-footer{margin-top:auto;padding:16px 12px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--rose-soft),var(--lavender-soft));border:1.5px solid var(--lavender);display:flex;align-items:center;justify-content:center;font-size:14px;}
+.user-info .name{font-size:13px;font-weight:500;}
+.user-info .role{font-size:11px;color:var(--text-muted);}
+.main{padding:36px 40px;display:flex;flex-direction:column;gap:24px;overflow-y:auto;min-height:100vh;}
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;}
+.page-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:600;letter-spacing:-0.5px;}
+.page-subtitle{font-size:13px;color:var(--text-muted);margin-top:3px;}
+.top-actions{display:flex;align-items:center;gap:10px;}
+.btn{padding:9px 18px;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all 0.2s;}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text-muted);}
+.btn-ghost:hover{border-color:var(--lavender);color:var(--lavender);}
+.btn-primary{background:linear-gradient(135deg,var(--rose),var(--lavender));color:white;}
+.btn-primary:hover{opacity:0.88;transform:translateY(-1px);}
+.btn-primary:active{transform:scale(0.97);}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.card-title{font-family:'Playfair Display',serif;font-size:17px;}
+.badge{font-size:11px;font-weight:500;padding:4px 10px;border-radius:20px;}
+.badge-rose{background:var(--rose-soft);color:var(--rose);}
+.badge-teal{background:var(--teal-soft);color:var(--teal);}
+.badge-lavender{background:var(--lavender-soft);color:var(--lavender);}
+.badge-amber{background:var(--amber-soft);color:var(--amber);}
+.sec-label{font-size:10px;font-weight:500;letter-spacing:1.2px;color:var(--text-dim);text-transform:uppercase;margin-bottom:10px;}
+.page{display:none;animation:fadeIn 0.4s ease;}
+.page.active{display:flex;flex-direction:column;gap:24px;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes growBar{from{width:0}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);background:#1e1729;border:1px solid rgba(155,127,232,0.3);color:#f0eaf8;padding:12px 24px;border-radius:50px;font-size:13px;opacity:0;transition:all 0.3s;z-index:9999;pointer-events:none;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ══════════════════════════════════════
+   DASHBOARD PAGE
+══════════════════════════════════════ */
+.alert-strip{background:linear-gradient(90deg,rgba(78,205,196,0.1),rgba(78,205,196,0.04));border:1px solid rgba(78,205,196,0.2);border-radius:12px;padding:12px 18px;display:flex;align-items:center;gap:12px;font-size:13px;color:var(--teal);}
+.alert-strip .dot{width:8px;height:8px;border-radius:50%;background:var(--teal);animation:pulse 2s infinite;}
+.cycle-row{display:grid;grid-template-columns:280px 1fr;gap:20px;}
+.cycle-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;display:flex;flex-direction:column;align-items:center;gap:20px;position:relative;overflow:hidden;}
+.cycle-card::before{content:'';position:absolute;top:0;right:0;width:180px;height:180px;background:radial-gradient(circle,rgba(232,97,122,0.07) 0%,transparent 70%);pointer-events:none;}
+.ring-wrap{position:relative;width:160px;height:160px;}
+.ring-wrap svg{width:160px;height:160px;transform:rotate(-90deg);}
+.ring-bg{fill:none;stroke:rgba(255,255,255,0.05);stroke-width:10;}
+.ring-fill{fill:none;stroke-width:10;stroke-linecap:round;stroke-dasharray:440;stroke-dashoffset:220;stroke:url(#ringGrad);transition:stroke-dashoffset 1s ease;}
+.ring-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+.ring-day{font-family:'Playfair Display',serif;font-size:38px;font-weight:600;line-height:1;}
+.ring-label{font-size:11px;color:var(--text-muted);margin-top:4px;letter-spacing:0.5px;}
+.cycle-info{width:100%;}
+.cycle-phase{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--rose-soft);border-radius:10px;margin-bottom:10px;}
+.phase-name{font-size:13px;font-weight:500;color:var(--rose);}
+.phase-days{font-size:12px;color:var(--text-muted);}
+.cycle-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.cstat{background:var(--surface2);border-radius:10px;padding:10px 12px;}
+.cstat-label{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;}
+.cstat-val{font-size:18px;font-weight:500;margin-top:2px;}
+.predictions-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:18px;}
+.cal-strip{display:grid;grid-template-columns:repeat(14,1fr);gap:4px;}
+.cal-day{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.cal-dow{font-size:9px;color:var(--text-dim);text-transform:uppercase;}
+.cal-num{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;transition:all 0.15s;}
+.cal-num:hover{background:rgba(255,255,255,0.06);}
+.cal-num.today{background:linear-gradient(135deg,var(--rose),var(--lavender));color:white;font-weight:600;}
+.cal-num.period{background:rgba(232,97,122,0.3);color:var(--rose);}
+.cal-num.fertile{background:rgba(78,205,196,0.2);color:var(--teal);}
+.cal-num.ovulation{background:var(--teal-soft);border:1.5px solid var(--teal);color:var(--teal);}
+.cal-num.predicted{border:1.5px dashed rgba(232,97,122,0.4);color:var(--text-muted);}
+.cal-legend{display:flex;gap:16px;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);}
+.legend-dot{width:8px;height:8px;border-radius:3px;}
+.bottom-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.mini-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:22px;}
+.symptom-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.symptom-chip{padding:8px 12px;border-radius:10px;font-size:12px;display:flex;align-items:center;gap:7px;background:var(--surface2);}
+.s-icon{font-size:15px;}
+.s-name{color:var(--text-muted);}
+.s-level{margin-left:auto;font-size:11px;font-weight:500;}
+.s-high{color:var(--rose);}
+.s-mid{color:var(--amber);}
+.s-low{color:var(--teal);}
+.chat-preview{display:flex;flex-direction:column;gap:10px;}
+.msg{padding:10px 14px;border-radius:12px;font-size:12.5px;line-height:1.5;max-width:85%;}
+.msg-ai{background:var(--surface2);color:var(--text-muted);border-radius:4px 12px 12px 12px;border-left:2px solid var(--lavender);align-self:flex-start;}
+.msg-user{background:var(--lavender-soft);color:var(--text);border-radius:12px 4px 12px 12px;align-self:flex-end;}
+.chat-input-row{display:flex;gap:8px;margin-top:4px;}
+.chat-inp{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;font-size:12px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;}
+.chat-inp:focus{border-color:var(--lavender);}
+.chat-inp::placeholder{color:var(--text-dim);}
+.chat-send{width:34px;height:34px;border-radius:10px;background:var(--lavender);border:none;cursor:pointer;color:white;font-size:14px;transition:opacity 0.2s;}
+.chat-send:hover{opacity:0.8;}
+.insight-list{display:flex;flex-direction:column;gap:12px;}
+.insight-meta{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;}
+.insight-name{color:var(--text-muted);}
+.insight-val{font-weight:500;}
+.bar-track{height:5px;background:rgba(255,255,255,0.05);border-radius:10px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:10px;transition:width 1s ease;}
+
+/* ══════════════════════════════════════
+   LOG SYMPTOMS PAGE
+══════════════════════════════════════ */
+.date-strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;}
+.date-pill{display:flex;flex-direction:column;align-items:center;padding:10px 16px;border-radius:12px;border:1px solid var(--border);cursor:pointer;transition:all 0.2s;min-width:62px;background:var(--surface);}
+.date-pill:hover{border-color:var(--lavender);}
+.date-pill.active{background:linear-gradient(135deg,var(--rose),var(--lavender));border-color:transparent;}
+.date-pill .dow{font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;}
+.date-pill .dom{font-size:20px;font-weight:600;margin:2px 0;}
+.date-pill .ind{width:5px;height:5px;border-radius:50%;background:transparent;}
+.date-pill.has-log .ind{background:var(--teal);}
+.date-pill.active .dow,.date-pill.active .dom,.date-pill.active .ind{color:white;}
+.date-pill.active .ind{background:rgba(255,255,255,0.7);}
+.log-layout{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;}
+.log-main{display:flex;flex-direction:column;gap:16px;}
+.log-side{display:flex;flex-direction:column;gap:16px;}
+.chip-row{display:flex;gap:8px;flex-wrap:wrap;}
+.chip{padding:9px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;font-size:13px;color:var(--text-muted);cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
+.chip:hover{border-color:var(--lavender);color:var(--lavender);}
+.chip.sel{background:var(--lavender-soft);border-color:var(--lavender);color:var(--lavender);}
+.chip.sel-rose{background:var(--rose-soft);border-color:var(--rose);color:var(--rose);}
+.chip.sel-teal{background:var(--teal-soft);border-color:var(--teal);color:var(--teal);}
+.sym-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.sym-btn{padding:12px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;font-size:12px;color:var(--text-muted);cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;text-align:center;}
+.sym-btn:hover{border-color:var(--rose);color:var(--rose);}
+.sym-btn.sel{background:var(--rose-soft);border-color:var(--rose);color:var(--rose);}
+.sym-btn .si{font-size:20px;display:block;margin-bottom:4px;}
+.mood-row{display:flex;gap:10px;flex-wrap:wrap;}
+.mood-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
+.mood-btn:hover{border-color:var(--amber);}
+.mood-btn.sel{background:var(--amber-soft);border-color:var(--amber);}
+.mood-btn .me{font-size:22px;}
+.mood-btn .ml{font-size:11px;color:var(--text-dim);}
+.mood-btn.sel .ml{color:var(--amber);}
+.slider-wrap{display:flex;align-items:center;gap:14px;}
+.slider-wrap input[type=range]{flex:1;accent-color:var(--rose);height:4px;}
+.slider-val{font-size:22px;font-weight:600;color:var(--rose);min-width:28px;text-align:center;}
+.log-hist-item{display:flex;gap:14px;padding:14px 16px;background:var(--surface2);border-radius:12px;margin-bottom:8px;border-left:3px solid var(--lavender);}
+.hist-date{font-size:11px;color:var(--text-dim);min-width:60px;}
+.hist-tags{display:flex;gap:6px;flex-wrap:wrap;}
+.hist-tag{font-size:11px;padding:3px 8px;border-radius:6px;background:var(--lavender-soft);color:var(--lavender);}
+.hist-tag.rose{background:var(--rose-soft);color:var(--rose);}
+.hist-tag.teal{background:var(--teal-soft);color:var(--teal);}
+textarea.note-inp{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;resize:none;height:80px;outline:none;transition:border-color 0.2s;}
+textarea.note-inp:focus{border-color:var(--lavender);}
+textarea.note-inp::placeholder{color:var(--text-dim);}
+
+/* ══════════════════════════════════════
+   CYCLE CALENDAR PAGE
+══════════════════════════════════════ */
+.cal-nav-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.cal-nav-btn{width:36px;height:36px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);cursor:pointer;font-size:16px;transition:all 0.2s;}
+.cal-nav-btn:hover{border-color:var(--lavender);color:var(--lavender);}
+.cal-month{font-family:'Playfair Display',serif;font-size:20px;}
+.full-cal{width:100%;}
+.full-cal-header{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;margin-bottom:8px;}
+.full-cal-header span{font-size:11px;color:var(--text-dim);font-weight:500;padding:6px 0;}
+.full-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.fcal-day{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;cursor:pointer;transition:all 0.15s;font-size:13px;position:relative;}
+.fcal-day:hover{background:rgba(255,255,255,0.04);}
+.fcal-day.empty{pointer-events:none;}
+.fcal-day.today{background:linear-gradient(135deg,var(--rose),var(--lavender));color:white;font-weight:600;}
+.fcal-day.period-d{background:rgba(232,97,122,0.25);color:var(--rose);}
+.fcal-day.fertile-d{background:rgba(78,205,196,0.18);color:var(--teal);}
+.fcal-day.ovulation-d{border:1.5px solid var(--teal);background:var(--teal-soft);color:var(--teal);font-weight:600;}
+.fcal-day.predicted-d{border:1.5px dashed rgba(232,97,122,0.35);color:var(--text-muted);}
+.fcal-day .log-dot{position:absolute;bottom:4px;width:4px;height:4px;border-radius:50%;background:var(--lavender);}
+.cal-info-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.cal-stat{background:var(--surface2);border-radius:12px;padding:14px 16px;}
+.cal-stat .csn{font-family:'Playfair Display',serif;font-size:22px;margin-bottom:2px;}
+.cal-stat .csl{font-size:11px;color:var(--text-dim);}
+.selected-day-info{background:var(--surface2);border-radius:14px;padding:16px 20px;border-left:3px solid var(--lavender);}
+.sdi-date{font-size:14px;font-weight:500;margin-bottom:8px;color:var(--lavender);}
+.sdi-tags{display:flex;gap:8px;flex-wrap:wrap;}
+.sdi-tag{padding:5px 12px;border-radius:8px;font-size:12px;}
+
+/* ══════════════════════════════════════
+   AI CHATBOT PAGE
+══════════════════════════════════════ */
+.ai-layout{display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start;}
+.chat-wrap{display:flex;flex-direction:column;gap:0;background:var(--surface);border:1px solid var(--border);border-radius:20px;overflow:hidden;height:calc(100vh - 200px);}
+.chat-top{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.ai-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--rose),var(--lavender));display:flex;align-items:center;justify-content:center;font-size:18px;}
+.ai-name{font-size:15px;font-weight:500;}
+.ai-status{font-size:11px;color:var(--teal);display:flex;align-items:center;gap:5px;}
+.ai-status-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:pulse 2s infinite;}
+.chat-msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;}
+.chat-msg{display:flex;gap:10px;max-width:80%;animation:fadeIn 0.3s ease;}
+.chat-msg.user{align-self:flex-end;flex-direction:row-reverse;}
+.chat-msg .cm-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.cm-ai-av{background:linear-gradient(135deg,var(--rose),var(--lavender));}
+.cm-user-av{background:var(--lavender-soft);border:1px solid var(--lavender);font-size:12px;}
+.chat-msg .cm-bubble{padding:12px 16px;border-radius:16px;font-size:13px;line-height:1.6;}
+.chat-msg.ai .cm-bubble{background:var(--surface2);color:var(--text-muted);border-radius:4px 16px 16px 16px;border-left:2px solid var(--lavender);}
+.chat-msg.user .cm-bubble{background:var(--lavender-soft);color:var(--text);border-radius:16px 4px 16px 16px;}
+.cm-time{font-size:10px;color:var(--text-dim);margin-top:4px;}
+.typing-ind{display:flex;gap:4px;align-items:center;padding:12px 16px;background:var(--surface2);border-radius:4px 16px 16px 16px;border-left:2px solid var(--lavender);width:fit-content;}
+.typing-ind span{width:7px;height:7px;background:var(--lavender);border-radius:50%;animation:bounce 1.2s infinite;}
+.typing-ind span:nth-child(2){animation-delay:0.2s;}
+.typing-ind span:nth-child(3){animation-delay:0.4s;}
+.suggest-chips{display:flex;gap:8px;overflow-x:auto;padding:12px 20px;border-top:1px solid var(--border);}
+.sug-chip{flex-shrink:0;padding:7px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:12px;color:var(--text-muted);cursor:pointer;white-space:nowrap;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
+.sug-chip:hover{border-color:var(--lavender);color:var(--lavender);}
+.full-chat-inp-row{display:flex;gap:10px;padding:14px 20px;border-top:1px solid var(--border);}
+.full-chat-inp{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s;}
+.full-chat-inp:focus{border-color:var(--lavender);}
+.full-chat-inp::placeholder{color:var(--text-dim);}
+.chat-send-btn{padding:12px 18px;background:linear-gradient(135deg,var(--rose),var(--lavender));border:none;border-radius:12px;color:white;cursor:pointer;font-size:16px;transition:opacity 0.2s;}
+.chat-send-btn:hover{opacity:0.85;}
+.ai-sidebar-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;}
+.ai-tip-item{padding:12px;background:var(--surface2);border-radius:10px;font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:8px;border-left:2px solid var(--lavender);}
+.chat-hist-item{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.chi-icon{font-size:14px;padding:6px;background:var(--surface2);border-radius:8px;}
+.chi-text{font-size:12px;color:var(--text-muted);line-height:1.4;}
+.chi-time{font-size:10px;color:var(--text-dim);margin-top:2px;}
+
+/* ══════════════════════════════════════
+   INSIGHTS PAGE
+══════════════════════════════════════ */
+.ins-tabs{display:flex;gap:8px;margin-bottom:4px;}
+.ins-tab{padding:8px 18px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+.ins-tab:hover{border-color:var(--lavender);color:var(--lavender);}
+.ins-tab.active{background:var(--lavender-soft);border-color:var(--lavender);color:var(--lavender);font-weight:500;}
+.ins-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.ins-stat{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;}
+.ins-stat .isn{font-family:'Playfair Display',serif;font-size:28px;margin-bottom:4px;}
+.ins-stat .isl{font-size:11px;color:var(--text-dim);}
+.ins-stat .ist{font-size:12px;margin-top:6px;}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;}
+.bar-chart-wrap{display:flex;align-items:flex-end;gap:10px;height:130px;border-bottom:1px solid var(--border);padding-bottom:0;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;}
+.bar-col .bv{font-size:11px;font-weight:500;}
+.bar-col .bar{width:100%;border-radius:6px 6px 0 0;}
+.bar-col .bm{font-size:10px;color:var(--text-dim);margin-top:6px;}
+.ins-two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.ins-row{margin-bottom:14px;}
+.anomaly-banner{background:linear-gradient(90deg,rgba(78,205,196,0.1),rgba(78,205,196,0.04));border:1px solid rgba(78,205,196,0.25);border-radius:14px;padding:18px 22px;display:flex;align-items:center;gap:16px;}
+.anb-icon{font-size:28px;}
+.anb-title{font-size:14px;font-weight:500;color:var(--teal);margin-bottom:4px;}
+.anb-sub{font-size:12px;color:var(--text-muted);}
+
+/* ══════════════════════════════════════
+   PROFILE PAGE
+══════════════════════════════════════ */
+.profile-layout{display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start;}
+.profile-hero-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;text-align:center;}
+.prof-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--rose),var(--lavender));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:600;color:white;margin:0 auto 14px;cursor:pointer;transition:opacity 0.2s;}
+.prof-avatar:hover{opacity:0.85;}
+.prof-name{font-family:'Playfair Display',serif;font-size:20px;margin-bottom:4px;}
+.prof-email{font-size:12px;color:var(--text-muted);}
+.prof-stats{display:flex;justify-content:space-around;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
+.ps{text-align:center;}
+.ps .psn{font-family:'Playfair Display',serif;font-size:22px;color:var(--lavender);}
+.ps .psl{font-size:10px;color:var(--text-dim);}
+.prof-streak{display:flex;align-items:center;gap:8px;background:var(--amber-soft);border:1px solid var(--amber-soft);border-radius:10px;padding:10px 14px;margin-top:16px;font-size:13px;color:var(--amber);}
+.settings-section{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;margin-bottom:16px;}
+.settings-title{font-family:'Playfair Display',serif;font-size:16px;margin-bottom:16px;}
+.settings-row{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);}
+.settings-row:last-child{border-bottom:none;padding-bottom:0;}
+.sr-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.sr-text{flex:1;}
+.sr-text h4{font-size:13px;font-weight:500;margin-bottom:2px;}
+.sr-text p{font-size:11px;color:var(--text-muted);}
+.toggle{width:38px;height:22px;border-radius:11px;background:rgba(255,255,255,0.1);position:relative;cursor:pointer;transition:background 0.2s;border:none;flex-shrink:0;}
+.toggle.on{background:linear-gradient(135deg,var(--rose),var(--lavender));}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;background:white;border-radius:50%;transition:transform 0.2s;}
+.toggle.on::after{transform:translateX(16px);}
+.profile-inp{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;}
+.profile-inp:focus{border-color:var(--lavender);}
+
+/* ══════════════════════════════════════
+   HISTORY PAGE
+══════════════════════════════════════ */
+.hist-filters{display:flex;gap:8px;}
+.hf-btn{padding:7px 16px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;transition:all 0.2s;}
+.hf-btn:hover{border-color:var(--lavender);color:var(--lavender);}
+.hf-btn.active{background:var(--lavender-soft);border-color:var(--lavender);color:var(--lavender);}
+.data-table{width:100%;border-collapse:collapse;font-size:13px;}
+.data-table th{text-align:left;padding:10px 16px;color:var(--text-dim);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;border-bottom:1px solid var(--border);}
+.data-table td{padding:14px 16px;border-bottom:1px solid var(--border);color:var(--text-muted);}
+.data-table tr:hover td{background:rgba(255,255,255,0.01);}
+.data-table tr:last-child td{border-bottom:none;}
+
+/* ══════════════════════════════════════
+   ANOMALIES PAGE
+══════════════════════════════════════ */
+.anom-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.anom-stat{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;text-align:center;}
+.anom-stat .asn{font-family:'Playfair Display',serif;font-size:26px;margin:8px 0 4px;}
+.anom-stat .asl{font-size:11px;color:var(--text-dim);}
+.anom-item{display:flex;align-items:center;gap:16px;padding:16px;background:var(--surface2);border-radius:12px;margin-bottom:10px;transition:all 0.2s;cursor:pointer;}
+.anom-item:hover{background:rgba(255,255,255,0.03);}
+.anom-item-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.anom-item-text{flex:1;}
+.anom-item-text h4{font-size:13px;font-weight:500;margin-bottom:3px;}
+.anom-item-text p{font-size:12px;color:var(--text-muted);}
+.anom-level{font-size:11px;font-weight:500;padding:4px 10px;border-radius:6px;}
+
+/* ══════════════════════════════════════
+   NOTIFICATIONS PAGE
+══════════════════════════════════════ */
+.notif-item{display:flex;align-items:flex-start;gap:16px;padding:18px 20px;background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:10px;cursor:pointer;transition:all 0.2s;}
+.notif-item:hover{border-color:rgba(155,127,232,0.2);}
+.notif-item.unread{border-left:3px solid var(--lavender);}
+.notif-icon-wrap{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.notif-body{flex:1;}
+.notif-body h4{font-size:13px;font-weight:500;margin-bottom:4px;}
+.notif-body p{font-size:12px;color:var(--text-muted);line-height:1.5;}
+.notif-meta{text-align:right;flex-shrink:0;}
+.notif-time{font-size:11px;color:var(--text-dim);}
+.notif-unread-dot{width:8px;height:8px;border-radius:50%;background:var(--lavender);margin:6px 0 0 auto;}
+
+/* ══════════════════════════════════════
+   SETTINGS PAGE
+══════════════════════════════════════ */
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.privacy-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.priv-card{padding:18px;background:var(--surface2);border:1px solid var(--border);border-radius:14px;cursor:pointer;transition:all 0.2s;}
+.priv-card:hover{border-color:var(--lavender);}
+.priv-card .pc-icon{font-size:24px;margin-bottom:10px;}
+.priv-card h4{font-size:13px;font-weight:500;margin-bottom:4px;}
+.priv-card p{font-size:11px;color:var(--text-muted);}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<div class="shell" id="app-shell" style="display:none">
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="logo" onclick="goToWelcome()" title="Back to Welcome" style="cursor:pointer;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.75'" onmouseout="this.style.opacity='1'">
+    <div class="logo-icon">🌙</div>
+    <span class="logo-text" style="font-size:15px;font-weight:500;">Health Assistant</span>
+    <span style="margin-left:auto;font-size:11px;color:var(--text-dim);">← Home</span>
+  </div>
+  <button class="nav-item active" id="nav-dashboard" onclick="goTo('dashboard')"><span class="nav-icon">⊞</span>Dashboard</button>
+  <button class="nav-item" id="nav-log" onclick="goTo('log')"><span class="nav-icon">📋</span>Log Symptoms</button>
+  <button class="nav-item" id="nav-symptom-history" onclick="goTo('symptom-history')"><span class="nav-icon">🕐</span>Symptom History</button>
+  <button class="nav-item" id="nav-history" onclick="goTo('history')"><span class="nav-icon">📅</span>Cycle History</button>
+  <button class="nav-item" id="nav-predictions" onclick="goTo('predictions')"><span class="nav-icon">🔮</span>Predictions</button>
+  <div class="nav-section">Insights</div>
+  <button class="nav-item" id="nav-insights" onclick="goTo('insights')"><span class="nav-icon">📊</span>Graphs</button>
+  <button class="nav-item" id="nav-anomalies" onclick="goTo('anomalies')"><span class="nav-icon">⚠️</span>Anomalies</button>
+  <div class="nav-section">Support</div>
+  <button class="nav-item" id="nav-ai" onclick="goTo('ai')"><span class="nav-icon">💬</span>AI Assistant<div class="notif-dot"></div></button>
+  <button class="nav-item" id="nav-chat-history" onclick="goTo('chat-history')"><span class="nav-icon">💾</span>Chat History</button>
+  <button class="nav-item" id="nav-reminders" onclick="goTo('reminders')"><span class="nav-icon">⏰</span>Reminders</button>
+  <button class="nav-item" id="nav-notifications" onclick="goTo('notifications')"><span class="nav-icon">🔔</span>Notifications</button>
+  <button class="nav-item" id="nav-settings" onclick="goTo('settings')"><span class="nav-icon">⚙️</span>Settings</button>
+  <div class="sidebar-footer">
+    <div class="avatar" id="sidebar-avatar">S</div>
+    <div class="user-info"><div class="name" id="sidebar-name">Sneha</div><div class="role">Cycle day 14</div></div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+
+<!-- ════════════ DASHBOARD ════════════ -->
+<div class="page active" id="page-dashboard">
+  <div class="topbar">
+    <div><h1 class="page-title">Good morning, <span class="user-display-name">Sneha</span> ✨</h1><p class="page-subtitle">Friday, March 27 · Here's your cycle overview</p></div>
+    <div class="top-actions">
+      <button class="btn btn-ghost" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle day/night mode" style="font-size:16px;padding:9px 14px;">🌙</button>
+      <button class="btn btn-ghost" onclick="exportData()">📤 Export</button>
+      <button class="btn btn-primary" onclick="goTo('log')">+ Log Today</button>
+    </div>
+  </div>
+  <div class="alert-strip"><div class="dot"></div><span>Ovulation window predicted in <strong>3 days</strong> (Mar 30). You may notice changes in discharge and energy.</span></div>
+  <div class="cycle-row">
+    <div class="cycle-card">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 160 160">
+          <defs><linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#e8617a"/><stop offset="100%" stop-color="#9b7fe8"/></linearGradient></defs>
+          <circle class="ring-bg" cx="80" cy="80" r="70"/>
+          <circle class="ring-fill" cx="80" cy="80" r="70"/>
+        </svg>
+        <div class="ring-center"><div class="ring-day">14</div><div class="ring-label">of 28 days</div></div>
+      </div>
+      <div class="cycle-info">
+        <div class="cycle-phase"><span class="phase-name">🌸 Follicular Phase</span><span class="phase-days">Days 5–14</span></div>
+        <div class="cycle-stats">
+          <div class="cstat"><div class="cstat-label">Next Period</div><div class="cstat-val" style="color:var(--rose)">Apr 10</div></div>
+          <div class="cstat"><div class="cstat-label">Cycle Length</div><div class="cstat-val">28 days</div></div>
+          <div class="cstat"><div class="cstat-label">Last Period</div><div class="cstat-val">Mar 13</div></div>
+          <div class="cstat"><div class="cstat-label">Ovulation</div><div class="cstat-val" style="color:var(--teal)">Mar 30</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="predictions-card">
+      <div class="card-header"><span class="card-title">Cycle Calendar</span><span class="badge badge-teal">March – April</span></div>
+      <div class="cal-strip">
+        <div class="cal-day"><span class="cal-dow">Fr</span><div class="cal-num today">27</div></div>
+        <div class="cal-day"><span class="cal-dow">Sa</span><div class="cal-num">28</div></div>
+        <div class="cal-day"><span class="cal-dow">Su</span><div class="cal-num">29</div></div>
+        <div class="cal-day"><span class="cal-dow">Mo</span><div class="cal-num fertile">30</div></div>
+        <div class="cal-day"><span class="cal-dow">Tu</span><div class="cal-num fertile">31</div></div>
+        <div class="cal-day"><span class="cal-dow">We</span><div class="cal-num ovulation">1</div></div>
+        <div class="cal-day"><span class="cal-dow">Th</span><div class="cal-num fertile">2</div></div>
+        <div class="cal-day"><span class="cal-dow">Fr</span><div class="cal-num fertile">3</div></div>
+        <div class="cal-day"><span class="cal-dow">Sa</span><div class="cal-num">4</div></div>
+        <div class="cal-day"><span class="cal-dow">Su</span><div class="cal-num">5</div></div>
+        <div class="cal-day"><span class="cal-dow">Mo</span><div class="cal-num">6</div></div>
+        <div class="cal-day"><span class="cal-dow">Tu</span><div class="cal-num">7</div></div>
+        <div class="cal-day"><span class="cal-dow">We</span><div class="cal-num">8</div></div>
+        <div class="cal-day"><span class="cal-dow">Th</span><div class="cal-num">9</div></div>
+      </div>
+      <div class="cal-strip">
+        <div class="cal-day"><span class="cal-dow">Fr</span><div class="cal-num predicted">10</div></div>
+        <div class="cal-day"><span class="cal-dow">Sa</span><div class="cal-num predicted">11</div></div>
+        <div class="cal-day"><span class="cal-dow">Su</span><div class="cal-num predicted">12</div></div>
+        <div class="cal-day"><span class="cal-dow">Mo</span><div class="cal-num predicted">13</div></div>
+        <div class="cal-day"><span class="cal-dow">Tu</span><div class="cal-num predicted">14</div></div>
+        <div class="cal-day"><span class="cal-dow">We</span><div class="cal-num">15</div></div>
+        <div class="cal-day"><span class="cal-dow">Th</span><div class="cal-num">16</div></div>
+        <div class="cal-day"><span class="cal-dow">Fr</span><div class="cal-num">17</div></div>
+        <div class="cal-day"><span class="cal-dow">Sa</span><div class="cal-num">18</div></div>
+        <div class="cal-day"><span class="cal-dow">Su</span><div class="cal-num">19</div></div>
+        <div class="cal-day"><span class="cal-dow">Mo</span><div class="cal-num">20</div></div>
+        <div class="cal-day"><span class="cal-dow">Tu</span><div class="cal-num">21</div></div>
+        <div class="cal-day"><span class="cal-dow">We</span><div class="cal-num">22</div></div>
+        <div class="cal-day"><span class="cal-dow">Th</span><div class="cal-num">23</div></div>
+      </div>
+      <div class="cal-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(135deg,var(--rose),var(--lavender))"></div>Today</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(78,205,196,0.3)"></div>Fertile</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--teal-soft);border:1px solid var(--teal)"></div>Ovulation</div>
+        <div class="legend-item"><div class="legend-dot" style="border:1px dashed rgba(232,97,122,0.5)"></div>Predicted</div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-grid">
+    <div class="mini-card">
+      <div class="card-header"><span class="card-title" style="font-size:15px">Today's Symptoms</span><span class="badge badge-rose" style="cursor:pointer" onclick="goTo('log')">Log now</span></div>
+      <div class="symptom-grid">
+        <div class="symptom-chip"><span class="s-icon">😊</span><span class="s-name">Mood</span><span class="s-level s-mid">Good</span></div>
+        <div class="symptom-chip"><span class="s-icon">🔥</span><span class="s-name">Pain</span><span class="s-level s-low">None</span></div>
+        <div class="symptom-chip"><span class="s-icon">💧</span><span class="s-name">Flow</span><span class="s-level s-low">Light</span></div>
+        <div class="symptom-chip"><span class="s-icon">⚡</span><span class="s-name">Energy</span><span class="s-level s-high">High</span></div>
+        <div class="symptom-chip"><span class="s-icon">😴</span><span class="s-name">Sleep</span><span class="s-level s-mid">7 hrs</span></div>
+        <div class="symptom-chip"><span class="s-icon">🍽️</span><span class="s-name">Appetite</span><span class="s-level s-mid">Norm</span></div>
+      </div>
+    </div>
+    <div class="mini-card">
+      <div class="card-header"><span class="card-title" style="font-size:15px">AI Assistant</span><span class="badge badge-lavender" style="cursor:pointer" onclick="goTo('ai')">Chat now</span></div>
+      <div class="chat-preview" id="dash-chat-preview">
+        <div class="msg msg-ai">You're in your peak energy phase! Great time for intense workouts. 🌟</div>
+        <div class="msg msg-user">What foods should I eat today?</div>
+        <div class="msg msg-ai">Leafy greens & iron-rich foods like lentils support follicular phase well.</div>
+      </div>
+      <div class="chat-input-row">
+        <input class="chat-inp" id="dash-inp" placeholder="Ask anything…" onkeydown="if(event.key==='Enter')dashSend()"/>
+        <button class="chat-send" onclick="dashSend()">↑</button>
+      </div>
+    </div>
+    <div class="mini-card">
+      <div class="card-header"><span class="card-title" style="font-size:15px">Cycle Insights</span><span class="badge badge-teal" style="cursor:pointer" onclick="goTo('insights')">View all</span></div>
+      <div class="insight-list">
+        <div class="insight-row"><div class="insight-meta"><span class="insight-name">Cycle Regularity</span><span class="insight-val" style="color:var(--teal)">92%</span></div><div class="bar-track"><div class="bar-fill" style="width:92%;background:var(--teal)"></div></div></div>
+        <div class="insight-row"><div class="insight-meta"><span class="insight-name">Avg Period Length</span><span class="insight-val">5.2 days</span></div><div class="bar-track"><div class="bar-fill" style="width:74%;background:var(--lavender)"></div></div></div>
+        <div class="insight-row"><div class="insight-meta"><span class="insight-name">Mood Stability</span><span class="insight-val" style="color:var(--amber)">68%</span></div><div class="bar-track"><div class="bar-fill" style="width:68%;background:var(--amber)"></div></div></div>
+        <div class="insight-row"><div class="insight-meta"><span class="insight-name">Pain Trend</span><span class="insight-val" style="color:var(--rose)">Mild ↓</span></div><div class="bar-track"><div class="bar-fill" style="width:30%;background:var(--rose)"></div></div></div>
+        <div class="insight-row"><div class="insight-meta"><span class="insight-name">Logging Streak</span><span class="insight-val" style="color:var(--lavender)">12 days 🔥</span></div><div class="bar-track"><div class="bar-fill" style="width:85%;background:linear-gradient(90deg,var(--rose),var(--lavender))"></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ LOG SYMPTOMS ════════════ -->
+<div class="page" id="page-log">
+  <div class="topbar">
+    <div><h1 class="page-title">Log Symptoms</h1><p class="page-subtitle">Cycle Day 14 · Friday, March 27</p></div>
+    <div class="top-actions">
+      <button class="btn btn-ghost" onclick="goTo('symptom-history')">🕐 History</button>
+      <button class="btn btn-ghost" onclick="viewHistory()">📋 View History</button>
+      <button class="btn btn-primary" onclick="saveLog()">✓ Save Log</button>
+    </div>
+  </div>
+  <!-- Date strip -->
+  <div class="date-strip" id="date-strip"></div>
+  <div class="log-layout">
+    <div class="log-main">
+      <!-- Flow -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Flow Intensity</span><span class="badge badge-rose">Required</span></div>
+        <div class="chip-row" id="flow-group">
+          <button class="chip" onclick="selGroup(this,'flow-group','sel-rose')">None</button>
+          <button class="chip" onclick="selGroup(this,'flow-group','sel-rose')">Spotting</button>
+          <button class="chip sel-rose" onclick="selGroup(this,'flow-group','sel-rose')">Light</button>
+          <button class="chip" onclick="selGroup(this,'flow-group','sel-rose')">Medium</button>
+          <button class="chip" onclick="selGroup(this,'flow-group','sel-rose')">Heavy</button>
+        </div>
+      </div>
+      <!-- Mood -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Mood</span></div>
+        <div class="mood-row" id="mood-group">
+          <button class="mood-btn sel" onclick="selGroup(this,'mood-group','sel')"><span class="me">😊</span><span class="ml">Happy</span></button>
+          <button class="mood-btn" onclick="selGroup(this,'mood-group','sel')"><span class="me">😔</span><span class="ml">Sad</span></button>
+          <button class="mood-btn" onclick="selGroup(this,'mood-group','sel')"><span class="me">😤</span><span class="ml">Irritable</span></button>
+          <button class="mood-btn" onclick="selGroup(this,'mood-group','sel')"><span class="me">😴</span><span class="ml">Tired</span></button>
+          <button class="mood-btn" onclick="selGroup(this,'mood-group','sel')"><span class="me">😰</span><span class="ml">Anxious</span></button>
+          <button class="mood-btn" onclick="selGroup(this,'mood-group','sel')"><span class="me">🤩</span><span class="ml">Energetic</span></button>
+          <button class="mood-btn" onclick="selGroup(this,'mood-group','sel')"><span class="me">😌</span><span class="ml">Calm</span></button>
+          <button class="mood-btn" onclick="selGroup(this,'mood-group','sel')"><span class="me">🥴</span><span class="ml">Nauseous</span></button>
+        </div>
+      </div>
+      <!-- Symptoms -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Symptoms</span><span class="badge badge-lavender">Select all that apply</span></div>
+        <div class="sym-grid">
+          <button class="sym-btn" onclick="this.classList.toggle('sel')"><span class="si">😣</span>Cramps</button>
+          <button class="sym-btn sel" onclick="this.classList.toggle('sel')"><span class="si">🤕</span>Headache</button>
+          <button class="sym-btn" onclick="this.classList.toggle('sel')"><span class="si">🫃</span>Bloating</button>
+          <button class="sym-btn" onclick="this.classList.toggle('sel')"><span class="si">🤢</span>Nausea</button>
+          <button class="sym-btn" onclick="this.classList.toggle('sel')"><span class="si">😪</span>Fatigue</button>
+          <button class="sym-btn" onclick="this.classList.toggle('sel')"><span class="si">💪</span>Tender Breasts</button>
+          <button class="sym-btn" onclick="this.classList.toggle('sel')"><span class="si">🔙</span>Back Pain</button>
+          <button class="sym-btn" onclick="this.classList.toggle('sel')"><span class="si">🧠</span>Brain Fog</button>
+          <button class="sym-btn" onclick="this.classList.toggle('sel')"><span class="si">💧</span>Discharge</button>
+          <button class="sym-btn" onclick="this.classList.toggle('sel')"><span class="si">🌡️</span>Fever</button>
+          <button class="sym-btn" onclick="this.classList.toggle('sel')"><span class="si">😵</span>Dizziness</button>
+          <button class="sym-btn" onclick="this.classList.toggle('sel')"><span class="si">🍫</span>Cravings</button>
+        </div>
+      </div>
+      <!-- Pain -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Pain Level</span><span class="badge badge-rose" id="pain-badge">0 / 10</span></div>
+        <div class="slider-wrap">
+          <span style="font-size:12px;color:var(--text-dim);">None</span>
+          <input type="range" min="0" max="10" value="0" id="pain-sl" oninput="updatePain(this.value)" style="flex:1;accent-color:var(--rose)"/>
+          <span style="font-size:12px;color:var(--text-dim);">Severe</span>
+          <div class="slider-val" id="pain-val">0</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:10px;">
+          <span style="font-size:11px;color:var(--text-dim);">0</span>
+          <span style="font-size:11px;color:var(--text-dim);">5</span>
+          <span style="font-size:11px;color:var(--text-dim);">10</span>
+        </div>
+      </div>
+      <!-- Notes -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Notes</span><span class="badge badge-lavender">Optional</span></div>
+        <textarea class="note-inp" id="log-notes" placeholder="Add any observations, feelings, or details for today…"></textarea>
+        <div style="display:flex;justify-content:flex-end;margin-top:8px;font-size:11px;color:var(--text-dim);" id="note-counter">0 / 300</div>
+      </div>
+    </div>
+    <div class="log-side">
+      <!-- Energy & Sleep -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Energy</span></div>
+        <div class="chip-row" id="energy-group">
+          <button class="chip" onclick="selGroup(this,'energy-group','sel-teal')">Very Low</button>
+          <button class="chip" onclick="selGroup(this,'energy-group','sel-teal')">Low</button>
+          <button class="chip sel-teal" onclick="selGroup(this,'energy-group','sel-teal')">Medium</button>
+          <button class="chip" onclick="selGroup(this,'energy-group','sel-teal')">High</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Sleep Last Night</span></div>
+        <div class="chip-row" id="sleep-group">
+          <button class="chip" onclick="selGroup(this,'sleep-group','sel')">≤4 hrs</button>
+          <button class="chip" onclick="selGroup(this,'sleep-group','sel')">5–6 hrs</button>
+          <button class="chip sel" onclick="selGroup(this,'sleep-group','sel')">7–8 hrs</button>
+          <button class="chip" onclick="selGroup(this,'sleep-group','sel')">9+ hrs</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Appetite</span></div>
+        <div class="chip-row" id="app-group">
+          <button class="chip" onclick="selGroup(this,'app-group','sel')">Very Low</button>
+          <button class="chip sel" onclick="selGroup(this,'app-group','sel')">Normal</button>
+          <button class="chip" onclick="selGroup(this,'app-group','sel')">Increased</button>
+          <button class="chip" onclick="selGroup(this,'app-group','sel')">Cravings</button>
+        </div>
+      </div>
+      <!-- Today's Summary -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Today's Summary</span></div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
+          <div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--surface2);border-radius:8px;"><span style="color:var(--text-muted);">Phase</span><span style="color:var(--rose);">🌸 Follicular</span></div>
+          <div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--surface2);border-radius:8px;"><span style="color:var(--text-muted);">Ovulation in</span><span style="color:var(--teal);">3 days</span></div>
+          <div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--surface2);border-radius:8px;"><span style="color:var(--text-muted);">Fertile window</span><span style="color:var(--teal);">Soon</span></div>
+          <div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--surface2);border-radius:8px;"><span style="color:var(--text-muted);">Logging streak</span><span style="color:var(--amber);">12 days 🔥</span></div>
+        </div>
+      </div>
+      <!-- Past 3 days -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Recent Logs</span></div>
+        <div class="log-hist-item"><div class="hist-date">Mar 26</div><div class="hist-tags"><span class="hist-tag">Happy</span><span class="hist-tag rose">Light flow</span><span class="hist-tag teal">High energy</span></div></div>
+        <div class="log-hist-item"><div class="hist-date">Mar 25</div><div class="hist-tags"><span class="hist-tag">Calm</span><span class="hist-tag rose">Light flow</span></div></div>
+        <div class="log-hist-item"><div class="hist-date">Mar 24</div><div class="hist-tags"><span class="hist-tag rose">Headache</span><span class="hist-tag">Tired</span><span class="hist-tag teal">7 hrs sleep</span></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ CYCLE HISTORY ════════════ -->
+<div class="page" id="page-history">
+  <div class="topbar">
+    <div><h1 class="page-title">Cycle History</h1><p class="page-subtitle">Your complete menstrual health timeline</p></div>
+    <div class="top-actions">
+      <button class="btn btn-ghost" onclick="goTo('predictions')">🔮 Predictions</button>
+      <button class="btn btn-ghost" onclick="exportData()">📤 Export</button></div>
+  </div>
+  <div class="hist-filters">
+    <button class="hf-btn active" onclick="filterHist(this)">All</button>
+    <button class="hf-btn" onclick="filterHist(this)">2025</button>
+    <button class="hf-btn" onclick="filterHist(this)">2024</button>
+    <button class="hf-btn" onclick="filterHist(this)">2023</button>
+  </div>
+  <div class="card">
+    <table class="data-table">
+      <thead><tr><th>Cycle #</th><th>Start Date</th><th>End Date</th><th>Duration</th><th>Cycle Length</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td style="color:var(--lavender)">#24</td><td>Mar 13, 2025</td><td>Mar 17, 2025</td><td style="color:var(--teal)">5 days</td><td>28 days</td><td style="color:var(--text-dim)">Normal</td></tr>
+        <tr><td style="color:var(--lavender)">#23</td><td>Feb 13, 2025</td><td>Feb 17, 2025</td><td style="color:var(--teal)">5 days</td><td>28 days</td><td style="color:var(--text-dim)">Mild cramps</td></tr>
+        <tr><td style="color:var(--lavender)">#22</td><td>Jan 16, 2025</td><td>Jan 20, 2025</td><td style="color:var(--teal)">5 days</td><td>28 days</td><td style="color:var(--text-dim)">Normal</td></tr>
+        <tr><td style="color:var(--lavender)">#21</td><td>Dec 19, 2024</td><td>Dec 23, 2024</td><td style="color:var(--amber)">5 days</td><td style="color:var(--amber)">29 days</td><td style="color:var(--text-dim)">Slightly longer</td></tr>
+        <tr><td style="color:var(--lavender)">#20</td><td>Nov 20, 2024</td><td>Nov 24, 2024</td><td style="color:var(--teal)">5 days</td><td>28 days</td><td style="color:var(--text-dim)">Normal</td></tr>
+        <tr><td style="color:var(--lavender)">#19</td><td>Oct 23, 2024</td><td>Oct 27, 2024</td><td style="color:var(--teal)">5 days</td><td style="color:var(--amber)">27 days</td><td style="color:var(--text-dim)">Slight irregularity</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ════════════ INSIGHTS ════════════ -->
+<div class="page" id="page-insights">
+  <div class="topbar">
+    <div><h1 class="page-title">Graphs & Trends</h1><p class="page-subtitle">ML-powered analysis · Last 6 months</p></div>
+    <div class="top-actions"><button class="btn btn-ghost" onclick="exportData()">📤 Export</button></div>
+  </div>
+  <div class="ins-tabs">
+    <button class="ins-tab active" onclick="selInsTab(this)">Cycle Length</button>
+    <button class="ins-tab" onclick="selInsTab(this)">Symptoms</button>
+    <button class="ins-tab" onclick="selInsTab(this)">Mood</button>
+    <button class="ins-tab" onclick="selInsTab(this)">Flow</button>
+  </div>
+  <div class="ins-grid">
+    <div class="ins-stat"><div style="font-size:22px">📅</div><div class="isn" style="color:var(--lavender)">28</div><div class="isl">Avg cycle (days)</div><div class="ist" style="color:var(--teal)">→ Stable</div></div>
+    <div class="ins-stat"><div style="font-size:22px">🩸</div><div class="isn" style="color:var(--rose)">5.2</div><div class="isl">Avg period (days)</div><div class="ist" style="color:var(--teal)">↓ Normal</div></div>
+    <div class="ins-stat"><div style="font-size:22px">🎯</div><div class="isn" style="color:var(--teal)">91%</div><div class="isl">Prediction accuracy</div><div class="ist" style="color:var(--teal)">↑ +3% this month</div></div>
+    <div class="ins-stat"><div style="font-size:22px">⚠️</div><div class="isn" style="color:var(--amber)">1</div><div class="isl">Minor anomalies</div><div class="ist" style="color:var(--amber)">Oct 2024</div></div>
+  </div>
+  <div class="ins-two-col">
+    <div class="chart-card">
+      <div class="card-header"><span class="card-title">Cycle Length Trend</span><span class="badge badge-lavender">6 months</span></div>
+      <div class="bar-chart-wrap" id="cycle-chart"></div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:14px;">Average: 28 days · Trend: Stable ✓</div>
+    </div>
+    <div class="chart-card">
+      <div class="card-header"><span class="card-title">Symptom Frequency</span><span class="badge badge-rose">Top 5</span></div>
+      <div id="sym-chart"></div>
+    </div>
+  </div>
+  <div class="chart-card">
+    <div class="card-header"><span class="card-title">Mood Distribution</span><span class="badge badge-amber">Last 30 days</span></div>
+    <div id="mood-chart"></div>
+  </div>
+  <div class="anomaly-banner">
+    <div class="anb-icon">🤖</div>
+    <div><div class="anb-title">Isolation Forest ML Model — All Clear</div><div class="anb-sub">Analyzed 6 cycles. No significant anomalies detected. Your cycle regularity score is 92%. Continue logging for improved accuracy.</div></div>
+    <button class="btn btn-ghost" onclick="goTo('anomalies')" style="flex-shrink:0">View Details →</button>
+  </div>
+</div>
+
+<!-- ════════════ AI CHATBOT ════════════ -->
+<div class="page" id="page-ai">
+  <div class="topbar">
+    <div><h1 class="page-title">AI Assistant</h1><p class="page-subtitle">Health Assistant · NLP-powered · Cycle-aware</p></div>
+    <div class="top-actions">
+      <button class="btn btn-ghost" onclick="goTo('chat-history')">💾 Saved Chats</button>
+      <button class="btn btn-ghost" onclick="clearAI()">🗑 Clear chat</button></div>
+  </div>
+  <div class="ai-layout">
+    <div style="display:flex;flex-direction:column;gap:0;">
+      <div class="chat-wrap">
+        <div class="chat-top">
+          <div class="ai-avatar">🌙</div>
+          <div><div class="ai-name">Health Assistant</div><div class="ai-status"><div class="ai-status-dot"></div>Online · Cycle day 14</div></div>
+          <button class="btn btn-ghost" style="margin-left:auto;font-size:12px;" onclick="clearAI()">Clear</button>
+        </div>
+        <div class="chat-msgs" id="ai-msgs">
+          <div class="chat-msg ai"><div class="cm-avatar cm-ai-av">🌙</div><div><div class="cm-bubble" id="ai-welcome-msg">Hi there! 🌸 I'm your Health Assistant. You're on cycle day 14 — your follicular phase is ending and ovulation is just 3 days away! Ask me anything about your health, symptoms, or cycle. 💜</div><div class="cm-time">Just now</div></div></div>
+        </div>
+        <div class="suggest-chips">
+          <button class="sug-chip" onclick="askLuna('When is my next period?')">🩸 Next period?</button>
+          <button class="sug-chip" onclick="askLuna('What should I eat during ovulation?')">🥗 What to eat?</button>
+          <button class="sug-chip" onclick="askLuna('Tell me about my fertile window')">🌺 Fertile window</button>
+          <button class="sug-chip" onclick="askLuna('How do I manage cramps?')">😣 Cramp relief</button>
+          <button class="sug-chip" onclick="askLuna('Is my cycle normal?')">📊 Am I normal?</button>
+          <button class="sug-chip" onclick="askLuna('What are the signs of ovulation?')">🌡️ Ovulation signs</button>
+        </div>
+        <div class="full-chat-inp-row">
+          <input class="full-chat-inp" id="ai-inp" placeholder="Ask about your cycle, symptoms, or health…" onkeydown="if(event.key==='Enter')sendLuna()"/>
+          <button class="chat-send-btn" onclick="sendLuna()">↑</button>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="ai-sidebar-card">
+        <div class="card-header"><span class="card-title" style="font-size:15px;">Daily Tips</span></div>
+        <div class="ai-tip-item">💧 Stay extra hydrated — estrogen rises before ovulation</div>
+        <div class="ai-tip-item">🥦 Iron-rich foods like spinach help replenish after period</div>
+        <div class="ai-tip-item">🧘 Light yoga reduces pre-ovulation tension</div>
+      </div>
+      <div class="ai-sidebar-card">
+        <div class="card-header"><span class="card-title" style="font-size:15px;">Chat History</span></div>
+        <div class="chat-hist-item"><span class="chi-icon">🩸</span><div><div class="chi-text">When is my next period?</div><div class="chi-time">Yesterday</div></div></div>
+        <div class="chat-hist-item"><span class="chi-icon">🥗</span><div><div class="chi-text">Best foods for follicular phase</div><div class="chi-time">Mar 25</div></div></div>
+        <div class="chat-hist-item"><span class="chi-icon">😣</span><div><div class="chi-text">Why do I have cramps mid-cycle?</div><div class="chi-time">Mar 22</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ ANOMALIES ════════════ -->
+<div class="page" id="page-anomalies">
+  <div class="topbar">
+    <div><h1 class="page-title">Anomaly Detection</h1><p class="page-subtitle">Isolation Forest ML model analysis</p></div>
+    <div class="top-actions"><span style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(78,205,196,0.1);border:1px solid rgba(78,205,196,0.3);border-radius:10px;font-size:12px;color:var(--teal);"><div style="width:6px;height:6px;border-radius:50%;background:var(--teal);animation:pulse 2s infinite;"></div>Model Active</span></div>
+  </div>
+  <div class="anom-grid">
+    <div class="anom-stat"><div style="font-size:24px">✅</div><div class="asn" style="color:var(--teal)">0</div><div class="asl">Critical anomalies</div></div>
+    <div class="anom-stat"><div style="font-size:24px">⚠️</div><div class="asn" style="color:var(--amber)">1</div><div class="asl">Minor irregularity</div></div>
+    <div class="anom-stat"><div style="font-size:24px">📊</div><div class="asn" style="color:var(--lavender)">91%</div><div class="asl">Detection accuracy</div></div>
+    <div class="anom-stat"><div style="font-size:24px">📅</div><div class="asn">6</div><div class="asl">Months analyzed</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Anomaly Log</span><span class="badge badge-teal">All clear</span></div>
+    <div class="anom-item" onclick="toast('Oct 2024 — cycle was 27 days vs avg 28')">
+      <div class="anom-item-icon" style="background:var(--amber-soft);">⚠️</div>
+      <div class="anom-item-text"><h4>Cycle Length Variation</h4><p>27-day cycle vs avg 28 days · October 2024</p></div>
+      <span class="anom-level" style="background:var(--amber-soft);color:var(--amber);">Minor</span>
+    </div>
+    <div class="anom-item" onclick="toast('All other cycles were within normal range')">
+      <div class="anom-item-icon" style="background:var(--teal-soft);">✅</div>
+      <div class="anom-item-text"><h4>All Other Cycles</h4><p>Within normal range (26–32 days) · 5 cycles</p></div>
+      <span class="anom-level" style="background:var(--teal-soft);color:var(--teal);">Normal</span>
+    </div>
+    <div style="margin-top:16px;padding:18px;background:rgba(78,205,196,0.06);border:1px solid rgba(78,205,196,0.2);border-radius:12px;">
+      <div style="font-size:13px;color:var(--teal);font-weight:500;margin-bottom:6px;">🤖 ML Model Summary</div>
+      <div style="font-size:12px;color:var(--text-muted);line-height:1.7;">Isolation Forest has analyzed your last 6 cycles. All detected anomalies are minor and within clinically normal range. No patterns suggesting PCOS, endometriosis, or hormonal imbalance were detected. Anomaly score: 0.08 (threshold: 0.3). Continue logging for improved accuracy.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ NOTIFICATIONS ════════════ -->
+<div class="page" id="page-notifications">
+  <div class="topbar">
+    <div><h1 class="page-title">Notifications</h1><p class="page-subtitle">3 unread</p></div>
+    <div class="top-actions"><button class="btn btn-ghost" onclick="markAllRead()">✓ Mark all read</button></div>
+  </div>
+  <div id="notif-list">
+    <div class="notif-item unread" onclick="readNotif(this)"><div class="notif-icon-wrap" style="background:var(--teal-soft);">🌡️</div><div class="notif-body"><h4>Ovulation window approaching</h4><p>Your fertile window opens in 3 days (Mar 30). Track carefully!</p></div><div class="notif-meta"><div class="notif-time">Just now</div><div class="notif-unread-dot"></div></div></div>
+    <div class="notif-item unread" onclick="readNotif(this)"><div class="notif-icon-wrap" style="background:var(--lavender-soft);">💊</div><div class="notif-body"><h4>Log reminder</h4><p>You haven't logged today's symptoms yet. Tap to log now.</p></div><div class="notif-meta"><div class="notif-time">9:00 AM</div><div class="notif-unread-dot"></div></div></div>
+    <div class="notif-item unread" onclick="readNotif(this)"><div class="notif-icon-wrap" style="background:var(--rose-soft);">🩸</div><div class="notif-body"><h4>Period reminder</h4><p>Your period is predicted in 14 days (Apr 10). Stock up on essentials!</p></div><div class="notif-meta"><div class="notif-time">8:00 AM</div><div class="notif-unread-dot"></div></div></div>
+    <div class="notif-item" onclick="readNotif(this)"><div class="notif-icon-wrap" style="background:var(--amber-soft);">📊</div><div class="notif-body"><h4>Monthly report ready</h4><p>Your February cycle report is ready. 28-day cycle, regular pattern.</p></div><div class="notif-meta"><div class="notif-time">Yesterday</div></div></div>
+    <div class="notif-item" onclick="readNotif(this)"><div class="notif-icon-wrap" style="background:var(--teal-soft);">⚠️</div><div class="notif-body"><h4>Anomaly cleared</h4><p>The October irregularity has been reviewed. No action needed.</p></div><div class="notif-meta"><div class="notif-time">Mar 24</div></div></div>
+    <div class="notif-item" onclick="readNotif(this)"><div class="notif-icon-wrap" style="background:var(--lavender-soft);">🤖</div><div class="notif-body"><h4>AI Insight</h4><p>Energy peaks on days 12–16. Schedule important tasks now!</p></div><div class="notif-meta"><div class="notif-time">Mar 23</div></div></div>
+  </div>
+</div>
+
+<!-- ════════════ SETTINGS / PROFILE ════════════ -->
+<div class="page" id="page-settings">
+  <div class="topbar">
+    <div><h1 class="page-title">Settings & Profile</h1><p class="page-subtitle">Manage your Health Assistant account</p></div>
+    <div class="top-actions"><button class="btn btn-primary" onclick="toast('✓ Settings saved!')">Save changes</button></div>
+  </div>
+  <div class="profile-layout">
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div class="profile-hero-card">
+        <div class="prof-avatar" id="prof-avatar-initial" onclick="toast('Photo upload — coming soon!')">S</div>
+        <div class="prof-name" id="prof-name-display">Sneha Kulkarni</div>
+        <div class="prof-email"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="cbb8a5aea3aa8baea6aaa2a7e5a8a4a6">[email&#160;protected]</a></div>
+        <div class="prof-stats">
+          <div class="ps"><div class="psn">6</div><div class="psl">Months</div></div>
+          <div class="ps"><div class="psn">142</div><div class="psl">Days logged</div></div>
+          <div class="ps"><div class="psn">3</div><div class="psl">Reports</div></div>
+        </div>
+        <div class="prof-streak">🔥 12-day logging streak — keep it up!</div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">Notifications</div>
+        <div class="settings-row"><div class="sr-icon" style="background:var(--rose-soft);">🩸</div><div class="sr-text"><h4>Period reminder</h4><p>3 days before predicted period</p></div><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+        <div class="settings-row"><div class="sr-icon" style="background:var(--teal-soft);">🌡️</div><div class="sr-text"><h4>Ovulation alert</h4><p>Notify when fertile window opens</p></div><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+        <div class="settings-row"><div class="sr-icon" style="background:var(--lavender-soft);">💊</div><div class="sr-text"><h4>Daily log reminder</h4><p>Remind me to log symptoms</p></div><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+        <div class="settings-row"><div class="sr-icon" style="background:var(--amber-soft);">📊</div><div class="sr-text"><h4>Weekly insights</h4><p>Summary every Sunday</p></div><button class="toggle" onclick="this.classList.toggle('on')"></button></div>
+        <div class="settings-row"><div class="sr-icon" style="background:var(--rose-soft);">⚠️</div><div class="sr-text"><h4>Anomaly alerts</h4><p>Alert on irregular patterns</p></div><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div class="settings-section">
+        <div class="settings-title">Profile Information</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div><div class="sec-label" style="font-size:10px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Name</div><input class="profile-inp" value="Sneha Kulkarni"/></div>
+          <div><div class="sec-label" style="font-size:10px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Email</div><input class="profile-inp" value="sneha@email.com"/></div>
+          <div><div class="sec-label" style="font-size:10px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Date of Birth</div><input class="profile-inp" value="01/01/1998"/></div>
+          <div><div class="sec-label" style="font-size:10px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Location</div><input class="profile-inp" value="Pune, India"/></div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">Cycle Settings</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div><div class="sec-label" style="font-size:10px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Avg cycle length</div><input class="profile-inp" value="28 days"/></div>
+          <div><div class="sec-label" style="font-size:10px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Avg period length</div><input class="profile-inp" value="5 days"/></div>
+          <div><div class="sec-label" style="font-size:10px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Tracking goal</div><input class="profile-inp" value="General health"/></div>
+          <div><div class="sec-label" style="font-size:10px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Last period date</div><input class="profile-inp" value="Mar 13, 2025"/></div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">Privacy & Data</div>
+        <div class="privacy-grid">
+          <div class="priv-card" onclick="toast('AES-256 encryption active ✓')"><div class="pc-icon">🔒</div><h4>Encryption</h4><p>AES-256 active</p></div>
+          <div class="priv-card" onclick="toast('Data backup synced ✓')"><div class="pc-icon">☁️</div><h4>Cloud Backup</h4><p>Auto-synced</p></div>
+          <div class="priv-card" onclick="confirmDelete()"><div class="pc-icon">🗑️</div><h4>Delete Data</h4><p>Erase all records</p></div>
+        </div>
+      </div>
+      <button onclick="confirmLogout()" style="padding:12px 24px;background:transparent;border:1px solid rgba(232,97,122,0.3);color:var(--rose);border-radius:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px;width:fit-content;">🚪 Log out</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SYMPTOM HISTORY ════════════ -->
+<div class="page" id="page-symptom-history">
+  <div class="topbar">
+    <div><h1 class="page-title">Symptom History</h1><p class="page-subtitle">Your past logs timeline</p></div>
+    <div class="top-actions"><button class="btn btn-ghost" onclick="exportData()">📤 Export</button></div>
+  </div>
+  <div class="hist-filters">
+    <button class="hf-btn active" onclick="filterHist(this)">All</button>
+    <button class="hf-btn" onclick="filterHist(this)">This Week</button>
+    <button class="hf-btn" onclick="filterHist(this)">This Month</button>
+    <button class="hf-btn" onclick="filterHist(this)">Last 3 Months</button>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Timeline</span><span class="badge badge-lavender">27 entries</span></div>
+    <div style="display:flex;flex-direction:column;gap:0;">
+      <!-- Timeline entries -->
+      <style>
+        .sh-entry{display:flex;gap:20px;padding:18px 0;border-bottom:1px solid var(--border);position:relative;}
+        .sh-entry:last-child{border-bottom:none;}
+        .sh-timeline{display:flex;flex-direction:column;align-items:center;width:50px;flex-shrink:0;}
+        .sh-date-lbl{font-size:10px;color:var(--text-dim);text-align:center;text-transform:uppercase;letter-spacing:0.5px;}
+        .sh-dot{width:12px;height:12px;border-radius:50%;margin:6px 0;flex-shrink:0;}
+        .sh-line{width:2px;flex:1;background:var(--border);min-height:20px;}
+        .sh-body{flex:1;}
+        .sh-day{font-size:13px;font-weight:500;margin-bottom:8px;color:var(--text);}
+        .sh-chips{display:flex;gap:6px;flex-wrap:wrap;}
+        .sh-chip{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;}
+        .sh-chip.mood{background:var(--lavender-soft);color:var(--lavender);}
+        .sh-chip.pain{background:var(--rose-soft);color:var(--rose);}
+        .sh-chip.energy{background:var(--teal-soft);color:var(--teal);}
+        .sh-chip.flow{background:var(--amber-soft);color:var(--amber);}
+        .sh-note{font-size:12px;color:var(--text-muted);margin-top:6px;font-style:italic;}
+        .sh-score{font-size:11px;color:var(--text-dim);margin-top:4px;}
+      </style>
+      <div class="sh-entry">
+        <div class="sh-timeline"><span class="sh-date-lbl">Mar<br>27</span><div class="sh-dot" style="background:var(--teal)"></div><div class="sh-line"></div></div>
+        <div class="sh-body"><div class="sh-day">Today</div><div class="sh-chips"><span class="sh-chip mood">😊 Happy</span><span class="sh-chip energy">⚡ High Energy</span><span class="sh-chip flow">💧 Light Flow</span></div><div class="sh-note">Feeling great today, workout done!</div><div class="sh-score">Pain: 1/10 · Sleep: 8h · Appetite: Normal</div></div>
+      </div>
+      <div class="sh-entry">
+        <div class="sh-timeline"><span class="sh-date-lbl">Mar<br>26</span><div class="sh-dot" style="background:var(--lavender)"></div><div class="sh-line"></div></div>
+        <div class="sh-body"><div class="sh-day">Yesterday</div><div class="sh-chips"><span class="sh-chip mood">😌 Calm</span><span class="sh-chip energy">⚡ Moderate</span><span class="sh-chip flow">💧 Light Flow</span></div><div class="sh-score">Pain: 2/10 · Sleep: 7h · Appetite: Normal</div></div>
+      </div>
+      <div class="sh-entry">
+        <div class="sh-timeline"><span class="sh-date-lbl">Mar<br>25</span><div class="sh-dot" style="background:var(--amber)"></div><div class="sh-line"></div></div>
+        <div class="sh-body"><div class="sh-day">March 25</div><div class="sh-chips"><span class="sh-chip mood">😴 Tired</span><span class="sh-chip pain">🔥 Mild Cramps</span></div><div class="sh-note">Slight headache in the afternoon</div><div class="sh-score">Pain: 4/10 · Sleep: 6h · Appetite: Low</div></div>
+      </div>
+      <div class="sh-entry">
+        <div class="sh-timeline"><span class="sh-date-lbl">Mar<br>24</span><div class="sh-dot" style="background:var(--rose)"></div><div class="sh-line"></div></div>
+        <div class="sh-body"><div class="sh-day">March 24</div><div class="sh-chips"><span class="sh-chip pain">🔥 Headache</span><span class="sh-chip mood">😔 Low Mood</span></div><div class="sh-score">Pain: 5/10 · Sleep: 5h · Appetite: Low</div></div>
+      </div>
+      <div class="sh-entry">
+        <div class="sh-timeline"><span class="sh-date-lbl">Mar<br>22</span><div class="sh-dot" style="background:var(--teal)"></div><div class="sh-line"></div></div>
+        <div class="sh-body"><div class="sh-day">March 22</div><div class="sh-chips"><span class="sh-chip mood">😊 Happy</span><span class="sh-chip energy">⚡ High Energy</span></div><div class="sh-score">Pain: 0/10 · Sleep: 8h · Appetite: High</div></div>
+      </div>
+      <div class="sh-entry">
+        <div class="sh-timeline"><span class="sh-date-lbl">Mar<br>20</span><div class="sh-dot" style="background:var(--lavender)"></div><div class="sh-line"></div></div>
+        <div class="sh-body"><div class="sh-day">March 20</div><div class="sh-chips"><span class="sh-chip mood">😌 Calm</span><span class="sh-chip flow">💧 Spotting</span></div><div class="sh-score">Pain: 1/10 · Sleep: 7.5h · Appetite: Normal</div></div>
+      </div>
+      <div class="sh-entry">
+        <div class="sh-timeline"><span class="sh-date-lbl">Mar<br>17</span><div class="sh-dot" style="background:var(--rose)"></div><div class="sh-line"></div></div>
+        <div class="sh-body"><div class="sh-day">March 17</div><div class="sh-chips"><span class="sh-chip pain">🔥 Heavy Cramps</span><span class="sh-chip flow">🩸 Heavy Flow</span><span class="sh-chip mood">😤 Irritable</span></div><div class="sh-note">Period day 5 — easing off</div><div class="sh-score">Pain: 7/10 · Sleep: 6h · Appetite: Low</div></div>
+      </div>
+    </div>
+    <button class="btn btn-ghost" style="width:100%;margin-top:16px;" onclick="toast('Loading more entries…')">Load more ↓</button>
+  </div>
+</div>
+
+<!-- ════════════ PREDICTIONS ════════════ -->
+<div class="page" id="page-predictions">
+  <div class="topbar">
+    <div><h1 class="page-title">Predictions</h1><p class="page-subtitle">ML-powered next cycle forecast</p></div>
+    <div class="top-actions"><span style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(78,205,196,0.1);border:1px solid rgba(78,205,196,0.3);border-radius:10px;font-size:12px;color:var(--teal);"><div style="width:6px;height:6px;border-radius:50%;background:var(--teal);animation:pulse 2s infinite;"></div>Model Active</span></div>
+  </div>
+  <style>
+    .pred-hero{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+    .pred-stat{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;text-align:center;}
+    .pred-stat .ps-icon{font-size:32px;margin-bottom:12px;}
+    .pred-stat .ps-val{font-family:'Playfair Display',serif;font-size:30px;font-weight:600;margin-bottom:4px;}
+    .pred-stat .ps-lbl{font-size:12px;color:var(--text-muted);}
+    .pred-stat .ps-conf{font-size:11px;color:var(--teal);margin-top:6px;}
+    .pred-timeline{display:flex;flex-direction:column;gap:12px;}
+    .pred-event{display:flex;align-items:center;gap:16px;padding:16px 20px;background:var(--surface2);border-radius:14px;border-left:3px solid transparent;}
+    .pred-event.period{border-left-color:var(--rose);}
+    .pred-event.ovulation{border-left-color:var(--teal);}
+    .pred-event.fertile{border-left-color:var(--lavender);}
+    .pred-event.pms{border-left-color:var(--amber);}
+    .pred-event-icon{font-size:22px;width:40px;text-align:center;}
+    .pred-event-body{flex:1;}
+    .pred-event-body h4{font-size:13px;font-weight:500;margin-bottom:3px;}
+    .pred-event-body p{font-size:12px;color:var(--text-muted);}
+    .pred-event-date{font-size:13px;font-weight:500;color:var(--text);text-align:right;}
+    .pred-event-conf{font-size:11px;color:var(--teal);text-align:right;}
+    .pred-factors{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .pred-factor{background:var(--surface2);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;}
+    .pred-factor-icon{font-size:20px;}
+    .pred-factor-body h4{font-size:12px;font-weight:500;margin-bottom:2px;}
+    .pred-factor-body p{font-size:11px;color:var(--text-muted);}
+  </style>
+  <div class="pred-hero">
+    <div class="pred-stat"><div class="ps-icon">🩸</div><div class="ps-val" style="color:var(--rose)">Apr 10</div><div class="ps-lbl">Next Period</div><div class="ps-conf">91% confidence · ±2 days</div></div>
+    <div class="pred-stat"><div class="ps-icon">🌿</div><div class="ps-val" style="color:var(--teal)">Mar 30</div><div class="ps-lbl">Ovulation</div><div class="ps-conf">88% confidence · ±1 day</div></div>
+    <div class="pred-stat"><div class="ps-icon">📅</div><div class="ps-val" style="color:var(--lavender)">28</div><div class="ps-lbl">Predicted Cycle Length</div><div class="ps-conf">Based on 6-cycle average</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Upcoming Events</span><span class="badge badge-teal">Next 30 days</span></div>
+    <div class="pred-timeline">
+      <div class="pred-event fertile"><div class="pred-event-icon">🌱</div><div class="pred-event-body"><h4>Fertile Window Opens</h4><p>High conception probability begins</p></div><div><div class="pred-event-date">Mar 28</div><div class="pred-event-conf">↑ 85% confidence</div></div></div>
+      <div class="pred-event ovulation"><div class="pred-event-icon">🌿</div><div class="pred-event-body"><h4>Peak Ovulation</h4><p>Highest fertile day · LH surge expected</p></div><div><div class="pred-event-date">Mar 30</div><div class="pred-event-conf">↑ 88% confidence</div></div></div>
+      <div class="pred-event fertile"><div class="pred-event-icon">🌸</div><div class="pred-event-body"><h4>Fertile Window Closes</h4><p>Luteal phase begins</p></div><div><div class="pred-event-date">Apr 3</div><div class="pred-event-conf">↑ 85% confidence</div></div></div>
+      <div class="pred-event pms"><div class="pred-event-icon">⚠️</div><div class="pred-event-body"><h4>PMS Window</h4><p>Possible mood shifts, bloating, fatigue</p></div><div><div class="pred-event-date">Apr 6–9</div><div class="pred-event-conf">↑ 72% confidence</div></div></div>
+      <div class="pred-event period"><div class="pred-event-icon">🩸</div><div class="pred-event-body"><h4>Period Start</h4><p>Expected 5-day flow · stock up essentials</p></div><div><div class="pred-event-date">Apr 10</div><div class="pred-event-conf">↑ 91% confidence</div></div></div>
+      <div class="pred-event period"><div class="pred-event-icon">✅</div><div class="pred-event-body"><h4>Period End</h4><p>Follicular phase begins again</p></div><div><div class="pred-event-date">Apr 15</div><div class="pred-event-conf">↑ 88% confidence</div></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Prediction Factors</span><span class="badge badge-lavender">ML inputs</span></div>
+    <div class="pred-factors">
+      <div class="pred-factor"><div class="pred-factor-icon">📊</div><div class="pred-factor-body"><h4>Cycle regularity</h4><p>92% — very stable</p></div></div>
+      <div class="pred-factor"><div class="pred-factor-icon">📅</div><div class="pred-factor-body"><h4>Avg cycle length</h4><p>28.1 days (6 cycles)</p></div></div>
+      <div class="pred-factor"><div class="pred-factor-icon">🩸</div><div class="pred-factor-body"><h4>Avg period duration</h4><p>5.2 days</p></div></div>
+      <div class="pred-factor"><div class="pred-factor-icon">🤖</div><div class="pred-factor-body"><h4>Anomaly score</h4><p>0.08 — well within normal</p></div></div>
+      <div class="pred-factor"><div class="pred-factor-icon">📝</div><div class="pred-factor-body"><h4>Logging streak</h4><p>12 days — improves accuracy</p></div></div>
+      <div class="pred-factor"><div class="pred-factor-icon">📈</div><div class="pred-factor-body"><h4>Model confidence</h4><p>91% prediction accuracy</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ CHAT HISTORY ════════════ -->
+<div class="page" id="page-chat-history">
+  <div class="topbar">
+    <div><h1 class="page-title">Chat History</h1><p class="page-subtitle">Saved conversations with Health Assistant</p></div>
+    <div class="top-actions"><button class="btn btn-ghost" onclick="toast('🗑 All chat history cleared')">🗑 Clear all</button></div>
+  </div>
+  <style>
+    .ch-session{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:12px;cursor:pointer;transition:all 0.2s;}
+    .ch-session:hover{border-color:rgba(155,127,232,0.3);transform:translateY(-1px);}
+    .ch-session-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
+    .ch-session-title{font-size:14px;font-weight:500;}
+    .ch-session-date{font-size:11px;color:var(--text-dim);}
+    .ch-session-msgs{display:flex;flex-direction:column;gap:6px;}
+    .ch-msg-preview{padding:8px 12px;border-radius:10px;font-size:12px;line-height:1.5;max-width:80%;}
+    .ch-msg-preview.ai{background:var(--surface2);color:var(--text-muted);border-left:2px solid var(--lavender);}
+    .ch-msg-preview.user{background:var(--lavender-soft);color:var(--text);align-self:flex-end;}
+    .ch-session-footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+    .ch-session-meta{font-size:11px;color:var(--text-dim);}
+    .ch-session-tag{font-size:11px;padding:3px 10px;border-radius:20px;background:var(--lavender-soft);color:var(--lavender);}
+  </style>
+  <div class="ch-session" onclick="goTo('ai')">
+    <div class="ch-session-header"><div class="ch-session-title">💧 Hydration & Ovulation Tips</div><div class="ch-session-date">Today, 10:14 AM</div></div>
+    <div class="ch-session-msgs">
+      <div class="ch-msg-preview user">What should I eat during ovulation?</div>
+      <div class="ch-msg-preview ai">Around ovulation, estrogen peaks! Focus on leafy greens, salmon, eggs and berries…</div>
+    </div>
+    <div class="ch-session-footer"><span class="ch-session-meta">3 messages · 2 min</span><span class="ch-session-tag">Nutrition</span></div>
+  </div>
+  <div class="ch-session" onclick="goTo('ai')">
+    <div class="ch-session-header"><div class="ch-session-title">🩸 Next Period Prediction</div><div class="ch-session-date">Yesterday, 8:45 PM</div></div>
+    <div class="ch-session-msgs">
+      <div class="ch-msg-preview user">When is my next period?</div>
+      <div class="ch-msg-preview ai">Your next period is predicted for April 10, 2025 ±2 days…</div>
+    </div>
+    <div class="ch-session-footer"><span class="ch-session-meta">4 messages · 3 min</span><span class="ch-session-tag">Cycle</span></div>
+  </div>
+  <div class="ch-session" onclick="goTo('ai')">
+    <div class="ch-session-header"><div class="ch-session-title">😣 Mid-Cycle Cramps</div><div class="ch-session-date">Mar 22, 3:12 PM</div></div>
+    <div class="ch-session-msgs">
+      <div class="ch-msg-preview user">Why do I have cramps mid-cycle?</div>
+      <div class="ch-msg-preview ai">Mid-cycle cramping is called mittelschmerz — pain associated with ovulation…</div>
+    </div>
+    <div class="ch-session-footer"><span class="ch-session-meta">6 messages · 5 min</span><span class="ch-session-tag">Symptoms</span></div>
+  </div>
+  <div class="ch-session" onclick="goTo('ai')">
+    <div class="ch-session-header"><div class="ch-session-title">🥗 Follicular Phase Diet</div><div class="ch-session-date">Mar 25, 11:00 AM</div></div>
+    <div class="ch-session-msgs">
+      <div class="ch-msg-preview user">Best foods for follicular phase?</div>
+      <div class="ch-msg-preview ai">Great choice! Focus on iron-rich foods like lentils, spinach, and lean meats…</div>
+    </div>
+    <div class="ch-session-footer"><span class="ch-session-meta">5 messages · 4 min</span><span class="ch-session-tag">Nutrition</span></div>
+  </div>
+  <div class="ch-session" onclick="goTo('ai')">
+    <div class="ch-session-header"><div class="ch-session-title">📊 Is My Cycle Normal?</div><div class="ch-session-date">Mar 20, 9:30 AM</div></div>
+    <div class="ch-session-msgs">
+      <div class="ch-msg-preview user">Is my cycle normal?</div>
+      <div class="ch-msg-preview ai">Absolutely yes! Your 28-day cycle with 5-day periods is textbook normal…</div>
+    </div>
+    <div class="ch-session-footer"><span class="ch-session-meta">2 messages · 1 min</span><span class="ch-session-tag">General</span></div>
+  </div>
+</div>
+
+<!-- ════════════ REMINDERS ════════════ -->
+<div class="page" id="page-reminders">
+  <div class="topbar">
+    <div><h1 class="page-title">Reminders</h1><p class="page-subtitle">Period, pill & check-in alerts</p></div>
+    <div class="top-actions"><button class="btn btn-primary" onclick="toast('✓ Reminder saved!')">+ Add Reminder</button></div>
+  </div>
+  <style>
+    .rem-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;margin-bottom:16px;}
+    .rem-item{display:flex;align-items:center;gap:16px;padding:16px;background:var(--surface2);border-radius:14px;margin-bottom:10px;transition:all 0.2s;}
+    .rem-item:last-child{margin-bottom:0;}
+    .rem-item:hover{background:rgba(255,255,255,0.03);}
+    .rem-icon-wrap{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+    .rem-body{flex:1;}
+    .rem-body h4{font-size:13px;font-weight:500;margin-bottom:3px;}
+    .rem-body p{font-size:12px;color:var(--text-muted);}
+    .rem-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+    .rem-time{font-size:12px;color:var(--text-muted);}
+    .rem-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    .rem-new-form{background:var(--surface2);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px;}
+    .rem-new-form label{font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;}
+    .rem-select{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;}
+    .rem-select:focus{border-color:var(--lavender);}
+  </style>
+  <div class="rem-grid">
+    <div>
+      <div class="rem-card">
+        <div class="card-header"><span class="card-title">Active Reminders</span><span class="badge badge-teal">4 active</span></div>
+        <div class="rem-item">
+          <div class="rem-icon-wrap" style="background:var(--rose-soft);">🩸</div>
+          <div class="rem-body"><h4>Period Start Reminder</h4><p>2 days before predicted period</p></div>
+          <div class="rem-right"><span class="rem-time">Apr 8 · 9:00 AM</span><button class="toggle on" onclick="this.classList.toggle('on');toast(this.classList.contains('on')?'Reminder on':'Reminder off')"></button></div>
+        </div>
+        <div class="rem-item">
+          <div class="rem-icon-wrap" style="background:var(--teal-soft);">💊</div>
+          <div class="rem-body"><h4>Daily Pill Reminder</h4><p>Take contraceptive pill</p></div>
+          <div class="rem-right"><span class="rem-time">Daily · 8:00 AM</span><button class="toggle on" onclick="this.classList.toggle('on');toast(this.classList.contains('on')?'Reminder on':'Reminder off')"></button></div>
+        </div>
+        <div class="rem-item">
+          <div class="rem-icon-wrap" style="background:var(--lavender-soft);">📋</div>
+          <div class="rem-body"><h4>Daily Check-In</h4><p>Log today's symptoms</p></div>
+          <div class="rem-right"><span class="rem-time">Daily · 8:00 PM</span><button class="toggle on" onclick="this.classList.toggle('on');toast(this.classList.contains('on')?'Reminder on':'Reminder off')"></button></div>
+        </div>
+        <div class="rem-item">
+          <div class="rem-icon-wrap" style="background:var(--amber-soft);">🌿</div>
+          <div class="rem-body"><h4>Ovulation Alert</h4><p>Fertile window opening soon</p></div>
+          <div class="rem-right"><span class="rem-time">Mar 28 · 7:00 AM</span><button class="toggle on" onclick="this.classList.toggle('on');toast(this.classList.contains('on')?'Reminder on':'Reminder off')"></button></div>
+        </div>
+        <div class="rem-item">
+          <div class="rem-icon-wrap" style="background:var(--surface);">💧</div>
+          <div class="rem-body"><h4>Hydration Reminder</h4><p>Drink water during fertile phase</p></div>
+          <div class="rem-right"><span class="rem-time">Daily · 12:00 PM</span><button class="toggle" onclick="this.classList.toggle('on');toast(this.classList.contains('on')?'Reminder on':'Reminder off')"></button></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="rem-card">
+        <div class="card-header"><span class="card-title">Add New Reminder</span></div>
+        <div class="rem-new-form">
+          <div><label>Reminder Type</label>
+            <select class="rem-select" style="margin-top:6px;">
+              <option>🩸 Period reminder</option>
+              <option>💊 Pill reminder</option>
+              <option>📋 Daily check-in</option>
+              <option>🌿 Ovulation alert</option>
+              <option>💧 Hydration</option>
+              <option>🏃 Exercise</option>
+              <option>📝 Custom</option>
+            </select>
+          </div>
+          <div><label>Time</label>
+            <input type="time" value="08:00" class="profile-inp" style="margin-top:6px;"/>
+          </div>
+          <div><label>Repeat</label>
+            <select class="rem-select" style="margin-top:6px;">
+              <option>Daily</option>
+              <option>Weekly</option>
+              <option>Specific date</option>
+              <option>Cycle-based</option>
+            </select>
+          </div>
+          <div><label>Note (optional)</label>
+            <input type="text" placeholder="E.g. Take with food" class="profile-inp" style="margin-top:6px;"/>
+          </div>
+          <button class="btn btn-primary" style="width:100%;" onclick="toast('✓ Reminder saved!')">Save Reminder</button>
+        </div>
+      </div>
+      <div class="rem-card" style="margin-top:0;">
+        <div class="card-header"><span class="card-title">Upcoming</span><span class="badge badge-rose">Next 7 days</span></div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
+          <div style="display:flex;justify-content:space-between;padding:10px 14px;background:var(--surface2);border-radius:10px;"><span>💊 Pill</span><span style="color:var(--text-muted);">Tomorrow 8:00 AM</span></div>
+          <div style="display:flex;justify-content:space-between;padding:10px 14px;background:var(--surface2);border-radius:10px;"><span>🌿 Ovulation Alert</span><span style="color:var(--teal);">Mar 28 7:00 AM</span></div>
+          <div style="display:flex;justify-content:space-between;padding:10px 14px;background:var(--surface2);border-radius:10px;"><span>📋 Check-in</span><span style="color:var(--text-muted);">Tonight 8:00 PM</span></div>
+          <div style="display:flex;justify-content:space-between;padding:10px 14px;background:var(--surface2);border-radius:10px;"><span>🩸 Period Alert</span><span style="color:var(--rose);">Apr 8 9:00 AM</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- FAB + FLOATING PANEL injected below by Python -->
+
+<!-- ══ BOTTOM NAV BAR ══ -->
+<style>
+#bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:500;background:var(--surface);border-top:1px solid var(--border);padding:10px 0 14px;backdrop-filter:blur(12px);}
+.bnav-wrap{display:flex;justify-content:space-around;align-items:center;max-width:500px;margin:0 auto;}
+.bnav-item{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:4px 16px;border-radius:12px;border:none;background:none;color:var(--text-muted);font-family:'DM Sans',sans-serif;font-size:10px;transition:all 0.2s;letter-spacing:0.3px;}
+.bnav-item:hover{color:var(--lavender);}
+.bnav-item.active{color:var(--lavender);}
+.bnav-icon{font-size:22px;transition:transform 0.2s;}
+.bnav-item.active .bnav-icon{transform:translateY(-2px);}
+.bnav-item.active span:last-child{color:var(--lavender);font-weight:500;}
+@media(max-width:768px){#bottom-nav{display:block;}.shell{grid-template-columns:1fr;}.sidebar{display:none;}.main{padding:20px 16px 80px;}}
+</style>
+<div id="bottom-nav">
+  <div class="bnav-wrap">
+    <button class="bnav-item active" id="bnav-dashboard" onclick="goTo('dashboard');setBottomNav('dashboard')">
+      <span class="bnav-icon">⊞</span><span>Home</span>
+    </button>
+    <button class="bnav-item" id="bnav-log" onclick="goTo('log');setBottomNav('log')">
+      <span class="bnav-icon">📋</span><span>Log</span>
+    </button>
+    <button class="bnav-item" id="bnav-ai" onclick="goTo('ai');setBottomNav('ai')">
+      <span class="bnav-icon">💬</span><span>Chat</span>
+    </button>
+    <button class="bnav-item" id="bnav-settings" onclick="goTo('settings');setBottomNav('settings')">
+      <span class="bnav-icon">👤</span><span>Me</span>
+    </button>
+  </div>
+</div>
+
+<!-- ══ ONBOARDING MODAL ══ -->
+<style>
+#onboarding-overlay{position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;}
+.ob-box{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:36px;max-width:460px;width:90%;animation:fadeIn 0.4s ease;}
+.ob-steps{display:flex;gap:6px;justify-content:center;margin-bottom:28px;}
+.ob-step{width:28px;height:4px;border-radius:2px;background:var(--border);transition:background 0.3s;}
+.ob-step.done{background:var(--lavender);}
+.ob-step.active{background:linear-gradient(90deg,var(--rose),var(--lavender));}
+.ob-icon{font-size:48px;text-align:center;margin-bottom:14px;}
+.ob-title{font-family:'Playfair Display',serif;font-size:22px;text-align:center;margin-bottom:8px;}
+.ob-sub{font-size:13px;color:var(--text-muted);text-align:center;line-height:1.6;margin-bottom:24px;}
+.ob-field{margin-bottom:16px;}
+.ob-field label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:6px;}
+.ob-field input,.ob-field select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;}
+.ob-field input:focus,.ob-field select:focus{border-color:var(--lavender);}
+.ob-row{display:flex;gap:10px;}
+.ob-row .ob-field{flex:1;}
+.ob-btns{display:flex;gap:10px;margin-top:8px;}
+.ob-chip-row{display:flex;gap:8px;flex-wrap:wrap;}
+.ob-chip{padding:7px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:12px;color:var(--text-muted);cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
+.ob-chip.sel{background:var(--lavender-soft);border-color:var(--lavender);color:var(--lavender);}
+</style>
+<div id="onboarding-overlay" style="display:none;">
+  <div class="ob-box">
+    <div class="ob-steps">
+      <div class="ob-step active" id="ob-s1"></div>
+      <div class="ob-step" id="ob-s2"></div>
+      <div class="ob-step" id="ob-s3"></div>
+      <div class="ob-step" id="ob-s4"></div>
+    </div>
+    <!-- Step 1 -->
+    <div id="ob-step-1">
+      <div class="ob-icon">🌸</div>
+      <div class="ob-title">Welcome to Health Assistant</div>
+      <div class="ob-sub">Let's set up your profile so we can personalise your experience and give you accurate predictions.</div>
+      <div class="ob-row">
+        <div class="ob-field"><label>First Name</label><input id="ob-name" type="text" placeholder="Your name"/></div>
+        <div class="ob-field"><label>Date of Birth</label><input type="date" id="ob-dob"/></div>
+      </div>
+      <div class="ob-field"><label>Your Goal</label>
+        <div class="ob-chip-row" id="ob-goals">
+          <button class="ob-chip sel" onclick="selObChip(this,'ob-goals')">Track my cycle</button>
+          <button class="ob-chip" onclick="selObChip(this,'ob-goals')">Manage symptoms</button>
+          <button class="ob-chip" onclick="selObChip(this,'ob-goals')">Plan pregnancy</button>
+          <button class="ob-chip" onclick="selObChip(this,'ob-goals')">General wellness</button>
+        </div>
+      </div>
+      <div class="ob-btns"><button class="btn btn-primary" style="flex:1;" onclick="obNext(2)">Continue →</button></div>
+    </div>
+    <!-- Step 2 -->
+    <div id="ob-step-2" style="display:none;">
+      <div class="ob-icon">🩸</div>
+      <div class="ob-title">Your Cycle Details</div>
+      <div class="ob-sub">Tell us about your cycle so our ML model can make accurate predictions from day one.</div>
+      <div class="ob-row">
+        <div class="ob-field"><label>Last Period Start</label><input type="date" id="ob-last-period"/></div>
+        <div class="ob-field"><label>Avg Cycle Length (days)</label><input type="number" placeholder="28" min="21" max="45" value="28"/></div>
+      </div>
+      <div class="ob-row">
+        <div class="ob-field"><label>Avg Period Duration (days)</label><input type="number" placeholder="5" min="1" max="10" value="5"/></div>
+        <div class="ob-field"><label>Flow Intensity</label>
+          <select><option>Light</option><option selected>Moderate</option><option>Heavy</option></select>
+        </div>
+      </div>
+      <div class="ob-btns">
+        <button class="btn btn-ghost" style="flex:1;" onclick="obNext(1)">← Back</button>
+        <button class="btn btn-primary" style="flex:1;" onclick="obNext(3)">Continue →</button>
+      </div>
+    </div>
+    <!-- Step 3 -->
+    <div id="ob-step-3" style="display:none;">
+      <div class="ob-icon">⏰</div>
+      <div class="ob-title">Set Up Reminders</div>
+      <div class="ob-sub">Choose which reminders you'd like to receive to stay on top of your health.</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface2);border-radius:12px;"><span style="font-size:13px;">🩸 Period start reminder</span><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface2);border-radius:12px;"><span style="font-size:13px;">💊 Daily pill reminder</span><button class="toggle" onclick="this.classList.toggle('on')"></button></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface2);border-radius:12px;"><span style="font-size:13px;">📋 Daily symptom check-in</span><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface2);border-radius:12px;"><span style="font-size:13px;">🌿 Ovulation window alert</span><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+      </div>
+      <div class="ob-btns">
+        <button class="btn btn-ghost" style="flex:1;" onclick="obNext(2)">← Back</button>
+        <button class="btn btn-primary" style="flex:1;" onclick="obNext(4)">Continue →</button>
+      </div>
+    </div>
+    <!-- Step 4 -->
+    <div id="ob-step-4" style="display:none;">
+      <div class="ob-icon">✨</div>
+      <div class="ob-title">You're all set!</div>
+      <div class="ob-sub">Your Health Assistant is personalised and ready. Your first cycle prediction is already loading based on what you've told us.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px;">
+        <div style="background:var(--rose-soft);border-radius:12px;padding:14px;text-align:center;"><div style="font-size:20px;margin-bottom:4px;">🩸</div><div style="font-size:12px;color:var(--rose);font-weight:500;">Next period</div><div style="font-size:11px;color:var(--text-muted);">Apr 10</div></div>
+        <div style="background:var(--teal-soft);border-radius:12px;padding:14px;text-align:center;"><div style="font-size:20px;margin-bottom:4px;">🌿</div><div style="font-size:12px;color:var(--teal);font-weight:500;">Ovulation</div><div style="font-size:11px;color:var(--text-muted);">Mar 30</div></div>
+        <div style="background:var(--lavender-soft);border-radius:12px;padding:14px;text-align:center;"><div style="font-size:20px;margin-bottom:4px;">📊</div><div style="font-size:12px;color:var(--lavender);font-weight:500;">Cycle length</div><div style="font-size:11px;color:var(--text-muted);">28 days</div></div>
+        <div style="background:var(--amber-soft);border-radius:12px;padding:14px;text-align:center;"><div style="font-size:20px;margin-bottom:4px;">⏰</div><div style="font-size:12px;color:var(--amber);font-weight:500;">Reminders</div><div style="font-size:11px;color:var(--text-muted);">3 active</div></div>
+      </div>
+      <div class="ob-btns"><button class="btn btn-primary" style="flex:1;" onclick="finishOnboarding()">Go to Dashboard 🎉</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div id="modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;" onclick="if(event.target===this)closeModal()">
+  <div id="modal-inner" style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;max-width:380px;width:90%;animation:fadeIn 0.3s ease;"></div>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+/* ── NAV ── */
+function goTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.getElementById('nav-' + page) && document.getElementById('nav-' + page).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+/* ── TOAST ── */
+function toast(msg, dur) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), dur || 2400);
+}
+
+/* ── MODAL ── */
+function showModal(html) {
+  const m = document.getElementById('modal');
+  document.getElementById('modal-inner').innerHTML = html;
+  m.style.display = 'flex';
+}
+function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+/* ── DATE STRIP ── */
+(function buildDateStrip() {
+  const strip = document.getElementById('date-strip');
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const today = 27;
+  for (let d = 21; d <= 27; d++) {
+    const dow = days[(d + 1) % 7];
+    const pill = document.createElement('div');
+    pill.className = 'date-pill' + (d < 27 ? ' has-log' : '') + (d === today ? ' active' : '');
+    pill.innerHTML = `<span class="dow">${dow}</span><span class="dom">${d}</span><div class="ind"></div>`;
+    pill.onclick = () => {
+      document.querySelectorAll('.date-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      toast('Viewing log for Mar ' + d);
+    };
+    strip.appendChild(pill);
+  }
+})();
+
+/* ── LOG SYMPTOMS ── */
+function selGroup(el, groupId, cls) {
+  document.querySelectorAll('#' + groupId + ' button').forEach(b => b.classList.remove('sel', 'sel-rose', 'sel-teal'));
+  el.classList.add(cls);
+}
+
+function updatePain(v) {
+  document.getElementById('pain-val').textContent = v;
+  document.getElementById('pain-badge').textContent = v + ' / 10';
+  document.getElementById('pain-badge').style.background = v >= 7 ? 'var(--rose-soft)' : v >= 4 ? 'var(--amber-soft)' : 'var(--teal-soft)';
+  document.getElementById('pain-badge').style.color = v >= 7 ? 'var(--rose)' : v >= 4 ? 'var(--amber)' : 'var(--teal)';
+}
+
+document.getElementById('log-notes').addEventListener('input', function() {
+  const len = this.value.length;
+  document.getElementById('note-counter').textContent = len + ' / 300';
+  if (len > 300) this.value = this.value.slice(0, 300);
+});
+
+function saveLog() {
+  toast('✓ Today\'s log saved! Streak: 13 days 🔥');
+}
+
+function viewHistory() { goTo('history'); }
+
+/* ── CYCLE CHART ── */
+(function buildCharts() {
+  const cycleData = [{m:'Oct',v:27},{m:'Nov',v:28},{m:'Dec',v:29},{m:'Jan',v:28},{m:'Feb',v:28},{m:'Mar',v:28}];
+  const colors = ['#9b7fe8','#9b7fe8','#9b7fe8','#9b7fe8','#9b7fe8','#e8617a'];
+  const chart = document.getElementById('cycle-chart');
+  if (!chart) return;
+  cycleData.forEach((d, i) => {
+    const col = document.createElement('div');
+    col.className = 'bar-col';
+    col.innerHTML = `<div class="bv" style="color:${colors[i]}">${d.v}</div><div class="bar" style="height:${(d.v/32)*110}px;background:${colors[i]};opacity:0.85;"></div><div class="bm">${d.m}</div>`;
+    chart.appendChild(col);
+  });
+
+  const symData = [['Cramps','68%',68,'var(--rose)'],['Headache','42%',42,'var(--amber)'],['Bloating','55%',55,'var(--lavender)'],['Fatigue','38%',38,'var(--teal)'],['Nausea','20%',20,'rgba(232,97,122,0.6)']];
+  const sc = document.getElementById('sym-chart');
+  symData.forEach(([s,pct,num,c]) => {
+    sc.innerHTML += `<div class="insight-row" style="margin-bottom:12px;"><div class="insight-meta"><span class="insight-name">${s}</span><span class="insight-val" style="color:${c}">${pct}</span></div><div class="bar-track"><div class="bar-fill" style="width:${num}%;background:${c}"></div></div></div>`;
+  });
+
+  const moodData = [['😊 Happy','32%',32],['😌 Calm','24%',24],['😔 Sad','18%',18],['😤 Irritable','14%',14],['😰 Anxious','12%',12]];
+  const mc = document.getElementById('mood-chart');
+  moodData.forEach(([m,pct,num]) => {
+    mc.innerHTML += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><div style="font-size:13px;min-width:110px;color:var(--text-muted);">${m}</div><div style="flex:1;height:6px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${num}%;background:linear-gradient(90deg,var(--rose),var(--lavender));border-radius:4px;"></div></div><div style="font-size:12px;color:var(--lavender);font-weight:500;min-width:36px;">${pct}</div></div>`;
+  });
+})();
+
+/* ── INSIGHTS TABS ── */
+function selInsTab(el) {
+  document.querySelectorAll('.ins-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  toast('Showing: ' + el.textContent);
+}
+
+/* ── AI CHAT ── */
+const aiReplies = {
+  'When is my next period?': 'Your next period is predicted for **April 10, 2025** ± 2 days. Based on your 6-cycle history, your cycles are very consistent at 28 days. You might experience light spotting or cramps on April 9 as a sign. 🗓️',
+  'What should I eat during ovulation?': 'Around ovulation, your estrogen peaks! Great foods: 🥬 Leafy greens (folate), 🐟 Salmon (omega-3), 🥚 Eggs (protein & choline), 🫐 Berries (antioxidants), 💧 Coconut water (hydration). Avoid heavy, processed foods as your gut becomes more sensitive.',
+  'Tell me about my fertile window': 'Your fertile window opens **March 28** and closes **April 3**, with peak ovulation on **March 30**. This is the 6-day period with highest conception probability. Signs: clear stretchy discharge (egg-white), mild pelvic ache, increased libido. 🌺',
+  'How do I manage cramps?': 'For cramp relief: 🌡️ Heating pad on lower abdomen (15-20 mins), 💊 Ibuprofen works best if taken before cramps start, 🧘 Child\'s pose and cat-cow yoga stretches, 🍫 Dark chocolate has magnesium, 💧 Stay hydrated! If pain is > 7/10 consistently, please consult a doctor. 😣',
+  'Is my cycle normal?': 'Absolutely yes! 🎉 Your 28-day cycle with 5-day periods is textbook normal. The healthy range is 21-35 days. Your Isolation Forest anomaly score is just 0.08 (threshold: 0.3). Cycle regularity: 92%. You\'re doing great! ✅',
+  'What are the signs of ovulation?': 'Signs of ovulation around March 30: 💧 Clear, stretchy discharge (egg-white texture), 🌡️ Slight rise in basal body temperature (0.2-0.5°C), 😣 Mild one-sided pelvic pain (mittelschmerz), ⚡ Peak energy & libido, 👃 Heightened sense of smell. Track these to confirm! 🌡️',
+};
+
+function askLuna(q) {
+  addAiMsg(q, 'user');
+  addTyping();
+  const reply = aiReplies[q] || 'That\'s a thoughtful question! Based on your cycle data (day 14, follicular phase), I\'d recommend tracking this symptom in your log for better insights. Is there anything more specific I can help with? 💜';
+  setTimeout(() => { removeTyping(); addAiMsg(reply, 'ai'); }, 1000 + Math.random()*400);
+}
+
+function sendLuna() {
+  const inp = document.getElementById('ai-inp');
+  const msg = inp.value.trim();
+  if (!msg) return;
+  inp.value = '';
+  addAiMsg(msg, 'user');
+  addTyping();
+  const lower = msg.toLowerCase();
+  let reply = 'I understand your concern! Based on your cycle data, everything looks within normal range. Would you like me to analyze any specific symptoms from your logs? 💜';
+  if (lower.includes('period')) reply = aiReplies['When is my next period?'];
+  else if (lower.includes('eat') || lower.includes('food')) reply = aiReplies['What should I eat during ovulation?'];
+  else if (lower.includes('fertil') || lower.includes('pregnant')) reply = aiReplies['Tell me about my fertile window'];
+  else if (lower.includes('cramp') || lower.includes('pain')) reply = aiReplies['How do I manage cramps?'];
+  else if (lower.includes('normal') || lower.includes('regular')) reply = aiReplies['Is my cycle normal?'];
+  else if (lower.includes('ovulat')) reply = aiReplies['What are the signs of ovulation?'];
+  setTimeout(() => { removeTyping(); addAiMsg(reply, 'ai'); }, 1000 + Math.random()*500);
+}
+
+function addAiMsg(text, role) {
+  const msgs = document.getElementById('ai-msgs');
+  if (!msgs) return;
+  const now = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + role;
+  div.style.animation = 'fadeIn 0.3s ease';
+  if (role === 'ai') {
+    div.innerHTML = `<div class="cm-avatar cm-ai-av">🌙</div><div><div class="cm-bubble">${text}</div><div class="cm-time">${now}</div></div>`;
+  } else {
+    div.innerHTML = `<div class="cm-avatar cm-user-av" id="chat-user-av">${window.currentUserInitial||'U'}</div><div><div class="cm-bubble">${text}</div><div class="cm-time">${now}</div></div>`;
+  }
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function addTyping() {
+  const msgs = document.getElementById('ai-msgs');
+  if (!msgs) return;
+  const t = document.createElement('div');
+  t.className = 'chat-msg ai'; t.id = 'typing';
+  t.innerHTML = '<div class="cm-avatar cm-ai-av">🌙</div><div class="typing-ind"><span></span><span></span><span></span></div>';
+  msgs.appendChild(t); msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeTyping() { const t = document.getElementById('typing'); if (t) t.remove(); }
+function clearAI() { document.getElementById('ai-msgs').innerHTML = ''; addAiMsg('Chat cleared! How can I help you today, ' + (window.currentUserName||'there') + '? 🌸', 'ai'); }
+
+/* ── DASHBOARD MINI CHAT ── */
+function dashSend() {
+  const inp = document.getElementById('dash-inp');
+  const msg = inp.value.trim(); if (!msg) return; inp.value = '';
+  const preview = document.getElementById('dash-chat-preview');
+  const um = document.createElement('div'); um.className = 'msg msg-user'; um.textContent = msg; preview.appendChild(um);
+  const lower = msg.toLowerCase();
+  let reply = 'Great question! Logging it now… 🔍';
+  if (lower.includes('period')) reply = 'Next period: April 10 🗓️';
+  else if (lower.includes('eat') || lower.includes('food')) reply = 'Iron-rich foods like lentils and spinach! 🥬';
+  else if (lower.includes('ovulat')) reply = 'Ovulation predicted March 30 🌡️';
+  else if (lower.includes('cramp')) reply = 'Try magnesium + heating pad! 🧘‍♀️';
+  setTimeout(() => { const am = document.createElement('div'); am.className = 'msg msg-ai'; am.textContent = reply; preview.appendChild(am); preview.scrollTop = preview.scrollHeight; }, 700);
+}
+
+/* ── NOTIFICATIONS ── */
+function readNotif(el) {
+  el.classList.remove('unread');
+  const dot = el.querySelector('.notif-unread-dot'); if (dot) dot.remove();
+  el.style.borderLeft = '1px solid var(--border)';
+}
+function markAllRead() {
+  document.querySelectorAll('.notif-item').forEach(n => {
+    n.classList.remove('unread');
+    const dot = n.querySelector('.notif-unread-dot'); if (dot) dot.remove();
+    n.style.borderLeft = '1px solid var(--border)';
+  });
+  toast('✓ All notifications marked as read');
+}
+
+/* ── HISTORY FILTER ── */
+function filterHist(el) {
+  document.querySelectorAll('.hf-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  toast('Showing: ' + el.textContent);
+}
+
+/* ── EXPORT ── */
+function exportData() {
+  showModal(`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;">
+      <div style="font-family:'Playfair Display',serif;font-size:20px;">Export Data</div>
+      <button onclick="closeModal()" style="background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text-muted);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>
+    </div>
+    ${[['📄','CSV — Cycle & symptom data'],['📊','PDF — Health summary report'],['🗂️','JSON — Full data export']].map(([i,t]) => `
+    <div onclick="doExport('${t}')" style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;cursor:pointer;margin-bottom:10px;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--lavender)'" onmouseout="this.style.borderColor='var(--border)'">
+      <span style="font-size:22px;">${i}</span><div style="flex:1;font-size:13px;font-weight:500;">${t}</div><span style="color:var(--lavender);">↓</span>
+    </div>`).join('')}
+    <button onclick="closeModal()" style="width:100%;padding:11px;background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:4px;">Cancel</button>
+  `);
+}
+function doExport(t) { closeModal(); toast('📥 Preparing ' + t.split('—')[0].trim() + '…'); setTimeout(() => toast('✓ Download started!'), 1200); }
+
+/* ── CONFIRM MODALS ── */
+function confirmDelete() {
+  showModal(`<div style="text-align:center;"><div style="font-size:40px;margin-bottom:14px;">⚠️</div><div style="font-family:'Playfair Display',serif;font-size:20px;color:var(--rose);margin-bottom:10px;">Delete all data?</div><div style="font-size:13px;color:var(--text-muted);margin-bottom:22px;line-height:1.6;">This will permanently erase all your cycle logs. This cannot be undone.</div><div style="display:flex;gap:10px;"><button onclick="closeModal()" style="flex:1;padding:12px;background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;">Cancel</button><button onclick="closeModal();toast('Data deletion requested')" style="flex:1;padding:12px;background:var(--rose-soft);border:1px solid var(--rose);color:var(--rose);border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;">Delete</button></div></div>`);
+}
+function confirmLogout() {
+  showModal(`<div style="text-align:center;"><div style="font-size:36px;margin-bottom:14px;">🌙</div><div style="font-family:'Playfair Display',serif;font-size:20px;margin-bottom:10px;">Log out?</div><div style="font-size:13px;color:var(--text-muted);margin-bottom:22px;">You'll need to sign in again to access Health Assistant.</div><div style="display:flex;gap:10px;"><button onclick="closeModal()" style="flex:1;padding:12px;background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;">Cancel</button><button onclick="closeModal();toast('Goodbye, '+(window.currentUserName||'there')+'! 🌙');setTimeout(()=>{showScreen('screen-auth');document.getElementById('auth-container').classList.remove('active');},400)" style="flex:1;pad
+    " style="flex:1;padding:12px;background:var(--rose-soft);border:1px solid var(--rose);color:var(--rose);border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;">Log out</button></div></div>`);
+}
+</script>
+
+<!-- ══════════════════════════════════════════
+     SCREEN CONTROLLER
+══════════════════════════════════════════ -->
+<script>
+function showScreen(id) {
+  ['screen-landing','screen-auth','app-shell'].forEach(function(s){
+    var el=document.getElementById(s);
+    if(el){el.style.display='none';}
+  });
+  var t=document.getElementById(id);
+  if(!t)return;
+  if(id==='app-shell'){t.style.display='grid';}
+  else{t.style.display='flex';t.style.flexDirection='column';t.style.minHeight='100vh';}
+}
+window.addEventListener('DOMContentLoaded',function(){showScreen('screen-landing');});
+
+function goToWelcome() {
+  showScreen('screen-landing');
+  window.scrollTo(0, 0);
+}
+
+/* ── BOTTOM NAV ── */
+function setBottomNav(page) {
+  document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
+  var el = document.getElementById('bnav-' + page);
+  if (el) el.classList.add('active');
+}
+
+/* ── ONBOARDING ── */
+var obFirstLogin = false;
+function showOnboarding() {
+  document.getElementById('onboarding-overlay').style.display = 'flex';
+  obFirstLogin = true;
+  obNext(1); // always reset to step 1
+}
+function obNext(step) {
+  for (var i = 1; i <= 4; i++) {
+    var s = document.getElementById('ob-step-' + i);
+    var dot = document.getElementById('ob-s' + i);
+    if (s) s.style.display = (i === step) ? 'block' : 'none';
+    if (dot) {
+      dot.classList.remove('active','done');
+      if (i < step) dot.classList.add('done');
+      else if (i === step) dot.classList.add('active');
+    }
+  }
+}
+function selObChip(el, groupId) {
+  document.querySelectorAll('#' + groupId + ' .ob-chip').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function finishOnboarding() {
+  var nameEl = document.getElementById('ob-name');
+  if (nameEl && nameEl.value.trim()) {
+    var name = nameEl.value.trim();
+    name = name.charAt(0).toUpperCase() + name.slice(1);
+    window.currentUserName = name;
+    window.currentUserInitial = name.charAt(0).toUpperCase();
+    applyUserName(name);
+  }
+  document.getElementById('onboarding-overlay').style.display = 'none';
+  toast('🎉 Welcome! Your profile is all set.');
+}
+
+/* ── USER LOGIN & NAME PROPAGATION ── */
+window.currentUserName = 'Sneha';
+window.currentUserInitial = 'S';
+
+function doLogin(form) {
+  var inputs = form ? form.querySelectorAll('input[type="text"], input[type="email"]') : [];
+  var name = '';
+  for (var i = 0; i < inputs.length; i++) {
+    var val = inputs[i].value.trim();
+    if (val) { name = val; break; }
+  }
+  if (!name) name = 'User';
+  // Capitalise first letter
+  name = name.charAt(0).toUpperCase() + name.slice(1);
+  window.currentUserName = name;
+  window.currentUserInitial = name.charAt(0).toUpperCase();
+  applyUserName(name);
+  showScreen('app-shell');
+  window.scrollTo(0, 0);
+  // Show onboarding wizard only on fresh login, not when called from finishOnboarding
+  if (!obFirstLogin) {
+    setTimeout(function() { showOnboarding(); }, 400);
+  }
+}
+
+function applyUserName(name) {
+  var initial = name.charAt(0).toUpperCase();
+  // Sidebar
+  var sn = document.getElementById('sidebar-name');
+  if (sn) sn.textContent = name;
+  var sa = document.getElementById('sidebar-avatar');
+  if (sa) sa.textContent = initial;
+  // Dashboard greeting
+  document.querySelectorAll('.user-display-name').forEach(function(el){ el.textContent = name; });
+  // Profile page
+  var pn = document.getElementById('prof-name-display');
+  if (pn) pn.textContent = name + ' (User)';
+  var pa = document.getElementById('prof-avatar-initial');
+  if (pa) pa.textContent = initial;
+  // AI welcome message
+  var aw = document.getElementById('ai-welcome-msg');
+  if (aw) aw.innerHTML = 'Hi ' + name + '! 🌸 I\'m your Health Assistant. You\'re on cycle day 14 — your follicular phase is ending and ovulation is just 3 days away! Ask me anything about your health, symptoms, or cycle. 💜';
+  // Fab chat welcome
+  var fw = document.getElementById('fab-welcome-msg');
+  if (fw) fw.textContent = 'Hi ' + name + '! 🌸 I\'m your Health Assistant. How can I help today?';
+}
+
+/* ── DAY / NIGHT MODE ── */
+var isDayMode = false;
+
+var dayVars = {
+  '--bg': '#f8f4ff',
+  '--surface': '#ffffff',
+  '--surface2': '#f0eaf8',
+  '--border': 'rgba(100,80,140,0.12)',
+  '--text': '#2d1a4a',
+  '--text-muted': 'rgba(45,26,74,0.55)',
+  '--text-dim': 'rgba(45,26,74,0.32)',
+  '--rose-soft': 'rgba(232,97,122,0.10)',
+  '--lavender-soft': 'rgba(155,127,232,0.12)',
+  '--teal-soft': 'rgba(78,205,196,0.10)',
+  '--amber-soft': 'rgba(244,162,97,0.10)'
+};
+
+var nightVars = {
+  '--bg': '#0d0a14',
+  '--surface': '#16111f',
+  '--surface2': '#1e1729',
+  '--border': 'rgba(255,255,255,0.07)',
+  '--text': '#f0eaf8',
+  '--text-muted': 'rgba(240,234,248,0.45)',
+  '--text-dim': 'rgba(240,234,248,0.25)',
+  '--rose-soft': 'rgba(232,97,122,0.15)',
+  '--lavender-soft': 'rgba(155,127,232,0.15)',
+  '--teal-soft': 'rgba(78,205,196,0.12)',
+  '--amber-soft': 'rgba(244,162,97,0.12)'
+};
+
+function toggleTheme() {
+  isDayMode = !isDayMode;
+  var root = document.documentElement;
+  var vars = isDayMode ? dayVars : nightVars;
+  for (var key in vars) {
+    root.style.setProperty(key, vars[key]);
+  }
+  var btn = document.getElementById('theme-toggle-btn');
+  if (btn) {
+    btn.textContent = isDayMode ? '☀️' : '🌙';
+    btn.title = isDayMode ? 'Switch to Night mode' : 'Switch to Day mode';
+  }
+  // Extra body bg adjustment for radial gradients visibility in day mode
+  document.body.style.setProperty('--body-glow-top', isDayMode ? 'rgba(155,127,232,0.06)' : 'rgba(155,127,232,0.08)');
+  document.body.style.setProperty('--body-glow-btm', isDayMode ? 'rgba(232,97,122,0.05)' : 'rgba(232,97,122,0.07)');
+  toast(isDayMode ? '☀️ Day mode on' : '🌙 Night mode on');
+}
+</script>
+
+<!-- ══════════════════════════════════════════
+     LANDING PAGE
+══════════════════════════════════════════ -->
+<div id="screen-landing" style="display:none;">
+<style>
+#screen-landing{background:#fdf6f0;font-family:'DM Sans',sans-serif;overflow-x:hidden;}
+#screen-landing *{box-sizing:border-box;}
+#screen-landing nav{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 3rem;background:rgba(253,246,240,0.96);border-bottom:1px solid rgba(244,168,212,0.2);position:sticky;top:0;z-index:100;backdrop-filter:blur(8px);}
+#screen-landing .ln-logo{display:flex;align-items:center;gap:10px;}
+#screen-landing .ln-circle{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#f9a8d4,#c4b5fd);display:flex;align-items:center;justify-content:center;font-size:16px;}
+#screen-landing .ln-name{font-family:'Playfair Display',serif;font-size:18px;color:#4a1c6e;font-weight:600;}
+#screen-landing .ln-links{display:flex;align-items:center;gap:2rem;}
+#screen-landing .ln-links a{font-size:14px;color:#7c5c8a;text-decoration:none;cursor:pointer;transition:color .2s;}
+#screen-landing .ln-links a:hover{color:#a78bfa;}
+#screen-landing .ln-btn{padding:9px 24px;background:linear-gradient(135deg,#f472b6,#a78bfa);color:#fff;border:none;border-radius:999px;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;box-shadow:0 4px 14px rgba(167,139,250,0.4);transition:transform .2s,box-shadow .2s;}
+#screen-landing .ln-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(167,139,250,0.5);}
+#screen-landing .ln-hero{display:flex;flex-direction:column;align-items:center;text-align:center;padding:5.5rem 2rem 3rem;position:relative;overflow:hidden;}
+#screen-landing .ln-bubbles{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;}
+#screen-landing .ln-bubble{position:absolute;border-radius:50%;opacity:.13;animation:lnFloat ease-in-out infinite;}
+@keyframes lnFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-22px) scale(1.04)}}
+#screen-landing .ln-badge{position:relative;z-index:1;display:inline-flex;align-items:center;gap:8px;background:rgba(196,181,253,.22);border:1.5px solid rgba(196,181,253,.5);color:#7c3aed;font-size:12px;font-weight:500;padding:7px 20px;border-radius:999px;margin-bottom:1.6rem;animation:lnUp .8s ease both;}
+#screen-landing .ln-bdot{width:7px;height:7px;border-radius:50%;background:#a78bfa;animation:lnBlink 1.5s infinite;}
+@keyframes lnBlink{0%,100%{opacity:1}50%{opacity:.2}}
+#screen-landing h1.ln-h1{position:relative;z-index:1;font-family:'Playfair Display',serif;font-size:clamp(2.4rem,5vw,3.6rem);color:#3b0764;line-height:1.15;margin-bottom:1.2rem;animation:lnUp .8s .15s ease both;opacity:0;}
+#screen-landing h1.ln-h1 em{font-style:italic;background:linear-gradient(90deg,#ec4899,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+#screen-landing .ln-sub{position:relative;z-index:1;font-size:16px;color:#7c5c8a;max-width:540px;line-height:1.75;font-weight:300;margin-bottom:2.8rem;animation:lnUp .8s .3s ease both;opacity:0;}
+#screen-landing .ln-btns{position:relative;z-index:1;display:flex;gap:18px;justify-content:center;flex-wrap:wrap;animation:lnUp .8s .45s ease both;opacity:0;}
+#screen-landing .ln-p{padding:16px 44px;background:linear-gradient(135deg,#f472b6,#a78bfa);color:#fff;border:none;border-radius:999px;font-size:16px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;box-shadow:0 10px 30px rgba(167,139,250,.5);transition:transform .2s;animation:lnPulse 2.5s ease-in-out infinite;}
+@keyframes lnPulse{0%,100%{box-shadow:0 10px 30px rgba(167,139,250,.5),0 0 0 0 rgba(167,139,250,.3)}50%{box-shadow:0 14px 36px rgba(167,139,250,.6),0 0 0 10px rgba(167,139,250,0)}}
+#screen-landing .ln-p:hover{transform:translateY(-4px) scale(1.03);}
+#screen-landing .ln-s{padding:15px 40px;background:#fff;color:#7c3aed;border:2px solid #a78bfa;border-radius:999px;font-size:16px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .25s;}
+#screen-landing .ln-s:hover{border-color:#8b5cf6;transform:translateY(-3px);box-shadow:0 8px 24px rgba(139,92,246,.2);}
+#screen-landing .ln-scroll{position:relative;z-index:1;margin-top:2.5rem;display:flex;flex-direction:column;align-items:center;gap:6px;animation:lnUp .8s .9s ease both;opacity:0;}
+#screen-landing .ln-scroll span{font-size:11px;color:#c4b5fd;letter-spacing:.1em;text-transform:uppercase;}
+#screen-landing .ln-arr{width:20px;height:20px;animation:lnBounce 1.6s ease-in-out infinite;}
+@keyframes lnBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+#screen-landing .ln-stats{display:flex;justify-content:center;gap:3rem;padding:2.5rem 2rem 1rem;flex-wrap:wrap;animation:lnUp .8s .6s ease both;opacity:0;}
+#screen-landing .ln-sn{font-family:'Playfair Display',serif;font-size:2rem;color:#7c3aed;font-weight:600;}
+#screen-landing .ln-sl{font-size:12px;color:#9c7bb5;margin-top:3px;text-align:center;}
+#screen-landing .ln-feats{padding:3rem 2rem 4rem;max-width:1100px;margin:0 auto;width:100%;}
+#screen-landing .ln-sh{text-align:center;margin-bottom:2.5rem;}
+#screen-landing .ln-sh h2{font-family:'Playfair Display',serif;font-size:1.9rem;color:#3b0764;margin-bottom:.4rem;}
+#screen-landing .ln-sh p{font-size:14px;color:#9c7bb5;font-weight:300;}
+#screen-landing .ln-fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;}
+#screen-landing .ln-fc{background:#fff;border:1px solid #f3e8ff;border-radius:16px;padding:1.5rem;opacity:0;transform:translateY(30px);transition:transform .5s ease,opacity .5s ease,box-shadow .2s;}
+#screen-landing .ln-fc.vis{opacity:1;transform:translateY(0);}
+#screen-landing .ln-fc:hover{transform:translateY(-5px);box-shadow:0 14px 36px rgba(167,139,250,.18);}
+#screen-landing .ln-fi{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;}
+#screen-landing .ln-ft{font-size:15px;font-weight:500;color:#4a1c6e;margin-bottom:6px;}
+#screen-landing .ln-fd{font-size:13px;color:#9c7bb5;line-height:1.6;font-weight:300;}
+#screen-landing .ln-cta{background:linear-gradient(135deg,#f9a8d4,#c4b5fd);padding:3.5rem 2rem;text-align:center;margin:0 2rem 3rem;border-radius:24px;opacity:0;transform:translateY(30px);transition:all .6s ease;}
+#screen-landing .ln-cta.vis{opacity:1;transform:translateY(0);}
+#screen-landing .ln-cta h2{font-family:'Playfair Display',serif;font-size:2rem;color:#fff;margin-bottom:.8rem;}
+#screen-landing .ln-cta p{font-size:14px;color:rgba(255,255,255,.88);margin-bottom:2rem;font-weight:300;}
+#screen-landing .ln-cb{padding:15px 42px;background:#fff;color:#7c3aed;border:none;border-radius:999px;font-size:15px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.14);transition:transform .2s,box-shadow .2s;}
+#screen-landing .ln-cb:hover{transform:translateY(-3px);box-shadow:0 14px 32px rgba(0,0,0,.2);}
+#screen-landing footer{text-align:center;padding:1.5rem;font-size:12px;color:#b39ddb;border-top:1px solid #f3e8ff;}
+@keyframes lnUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+</style>
+<nav>
+  <div class="ln-logo"><div class="ln-circle">🌙</div><span class="ln-name">Health Assistant</span></div>
+  <div class="ln-links">
+    <a onclick="document.getElementById('ln-features').scrollIntoView({behavior:'smooth'})">Features</a>
+    <a onclick="document.getElementById('ln-features').scrollIntoView({behavior:'smooth'})">About</a>
+    <a onclick="document.getElementById('ln-features').scrollIntoView({behavior:'smooth'})">Research</a>
+    <button class="ln-btn" onclick="showScreen('screen-auth')">Login / Sign up</button>
+  </div>
+</nav>
+<section class="ln-hero">
+  <div class="ln-bubbles" id="ln-bubbles"></div>
+  <div class="ln-badge"><div class="ln-bdot"></div>AI-Powered Women's Health</div>
+  <h1 class="ln-h1">Track Your Cycle,<br><em>Understand Your Body</em></h1>
+  <p class="ln-sub">An intelligent menstrual health platform combining machine learning, anomaly detection, and a 24/7 AI assistant — built for every body.</p>
+  <div class="ln-btns">
+    <button class="ln-p" onclick="showScreen('screen-auth');setTimeout(function(){document.getElementById('auth-reg-btn').click();},200)">✦ Get Started Free</button>
+    <button class="ln-s" onclick="document.getElementById('ln-features').scrollIntoView({behavior:'smooth'})">See Features ↓</button>
+  </div>
+  <div class="ln-scroll"><span>Scroll to explore</span><svg class="ln-arr" viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10l6 6 6-6" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+</section>
+<div class="ln-stats">
+  <div><div class="ln-sn">91%</div><div class="ln-sl">Prediction accuracy</div></div>
+  <div><div class="ln-sn">24/7</div><div class="ln-sl">AI assistant</div></div>
+  <div><div class="ln-sn">5+</div><div class="ln-sl">Health insights</div></div>
+  <div><div class="ln-sn">100%</div><div class="ln-sl">Private & encrypted</div></div>
+</div>
+<section class="ln-feats" id="ln-features">
+  <div class="ln-sh"><h2>Everything you need</h2><p>Powered by ML, NLP & anomaly detection</p></div>
+  <div class="ln-fg">
+    <div class="ln-fc" style="transition-delay:0s"><div class="ln-fi" style="background:#fdf2f8"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="#ec4899" stroke-width="1.5"/><path d="M11 7v4l3 2" stroke="#ec4899" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="ln-ft">Cycle prediction</div><div class="ln-fd">ML-powered forecasting of your next period and ovulation window with high accuracy.</div></div>
+    <div class="ln-fc" style="transition-delay:.1s"><div class="ln-fi" style="background:#f5f3ff"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="#8b5cf6" stroke-width="1.5"/><path d="M7 11h8M11 7v8" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="ln-ft">Anomaly detection</div><div class="ln-fd">Identifies irregular cycles, missed periods, and abnormal patterns using Isolation Forest.</div></div>
+    <div class="ln-fc" style="transition-delay:.2s"><div class="ln-fi" style="background:#ecfdf5"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 16l4-4 3 3 4-5 3 3" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="ln-ft">Fertile window</div><div class="ln-fd">Calculates your ovulation date and 6-day fertile window so you can plan ahead.</div></div>
+    <div class="ln-fc" style="transition-delay:.3s"><div class="ln-fi" style="background:#fff7ed"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M6 8h10M6 12h7" stroke="#f97316" stroke-width="1.5" stroke-linecap="round"/><rect x="3" y="4" width="16" height="14" rx="3" stroke="#f97316" stroke-width="1.5"/></svg></div><div class="ln-ft">AI health chatbot</div><div class="ln-fd">NLP-powered assistant answers health queries, sends reminders, and provides tips 24/7.</div></div>
+    <div class="ln-fc" style="transition-delay:.4s"><div class="ln-fi" style="background:#fdf2f8"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="3" width="7" height="7" rx="1.5" stroke="#ec4899" stroke-width="1.5"/><rect x="12" y="3" width="7" height="7" rx="1.5" stroke="#ec4899" stroke-width="1.5"/><rect x="3" y="12" width="7" height="7" rx="1.5" stroke="#ec4899" stroke-width="1.5"/><rect x="12" y="12" width="7" height="7" rx="1.5" stroke="#ec4899" stroke-width="1.5"/></svg></div><div class="ln-ft">Dashboard & graphs</div><div class="ln-fd">Visual calendar, trend graphs, and symptom tracking to understand health over time.</div></div>
+    <div class="ln-fc" style="transition-delay:.5s"><div class="ln-fi" style="background:#f5f3ff"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="4" y="3" width="14" height="16" rx="3" stroke="#8b5cf6" stroke-width="1.5"/><path d="M8 8h6M8 12h4" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="ln-ft">Private & secure</div><div class="ln-fd">End-to-end encrypted storage. Your sensitive health data stays yours, always.</div></div>
+  </div>
+</section>
+<div style="padding:0 2rem 3rem;"><div class="ln-cta" id="ln-cta"><h2>Ready to know your body better?</h2><p>Join thousands who trust Health Assistant for personalized menstrual health insights.</p><button class="ln-cb" onclick="showScreen('screen-auth');setTimeout(function(){document.getElementById('auth-reg-btn').click();},200)">Start tracking today &rarr;</button></div></div>
+<footer>Made with care — Anand Kharode, Sejal Rathod, Krushita Lambhate &nbsp;|&nbsp; Guided by Prof. T. B. Faruki</footer>
+<script>
+(function(){
+  var cols=['#f9a8d4','#c4b5fd','#fbcfe8','#ddd6fe','#fda4af'];
+  var b=document.getElementById('ln-bubbles');if(!b)return;
+  for(var i=0;i<9;i++){var d=document.createElement('div');d.className='ln-bubble';var s=50+Math.random()*130;d.style.cssText='width:'+s+'px;height:'+s+'px;left:'+(Math.random()*100)+'%;top:'+(Math.random()*100)+'%;background:'+cols[i%5]+';animation-duration:'+(5+Math.random()*7)+'s;animation-delay:'+(Math.random()*5)+'s;';b.appendChild(d);}
+  var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting)e.target.classList.add('vis');});},{threshold:.15});
+  document.querySelectorAll('#screen-landing .ln-fc,#screen-landing .ln-cta').forEach(function(el){obs.observe(el);});
+})();
+</script>
+</div>
+
+<!-- ══════════════════════════════════════════
+     AUTH PAGE
+══════════════════════════════════════════ -->
+<div id="screen-auth" style="display:none;justify-content:center;align-items:center;">
+<style>
+#screen-auth{background:linear-gradient(135deg,#fde8f0,#ffc2d4,#ffb3c6);position:relative;overflow:hidden;}
+#screen-auth .auth-petals{position:absolute;inset:0;pointer-events:none;z-index:0;}
+#screen-auth .auth-back{position:absolute;top:24px;left:28px;z-index:100;background:rgba(255,255,255,.55);border:1.5px solid rgba(220,80,120,.25);color:#a03060;padding:8px 18px;border-radius:30px;font-size:13px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;font-family:'DM Sans',sans-serif;}
+#screen-auth .auth-back:hover{background:rgba(255,255,255,.8);transform:translateX(-2px);}
+#screen-auth .auth-petal{position:absolute;border-radius:60% 40% 60% 40%/70% 30% 70% 30%;opacity:0;animation:authFall linear infinite;}
+@keyframes authFall{0%{transform:translateY(-50px) rotate(0deg);opacity:0;}8%{opacity:.65;}90%{opacity:.45;}100%{transform:translateY(700px) rotate(420deg);opacity:0;}}
+#screen-auth .auth-box{position:relative;z-index:1;width:100%;max-width:820px;height:540px;background:rgba(255,255,255,.92);border-radius:30px;box-shadow:0 8px 40px rgba(220,80,120,.2);overflow:hidden;}
+#screen-auth .auth-box *{box-sizing:border-box;}
+#screen-auth .fb{position:absolute;width:50%;height:100%;display:flex;align-items:center;text-align:center;padding:36px;z-index:1;}
+#screen-auth .fb.login{right:0;left:auto;transition:right .6s ease-in-out 1.2s;}
+#screen-auth .auth-box.active .fb.login{right:-50%;}
+#screen-auth .fb.register{left:-50%;right:auto;transition:left .6s ease-in-out 1.2s;}
+#screen-auth .auth-box.active .fb.register{left:0;}
+#screen-auth form{width:100%;}
+#screen-auth .fb h1{font-family:'Playfair Display',serif;font-style:italic;font-size:32px;margin:0 0 6px;color:#7d2248;letter-spacing:-.5px;}
+#screen-auth .ib{position:relative;margin:16px 0;}
+#screen-auth .ib input{width:100%;padding:12px 44px 12px 16px;background:#fde8f0;border-radius:10px;border:1.5px solid #f9b8d0;outline:none;font-size:14px;color:#5a2035;font-style:italic;transition:border-color .2s,background .2s;}
+#screen-auth .ib input:focus{border-color:#e75480;background:#fff0f5;}
+#screen-auth .ib input::placeholder{color:#c48fa0;}
+#screen-auth .ib .ico{position:absolute;right:13px;top:50%;transform:translateY(-50%);pointer-events:none;}
+#screen-auth .ib .ico svg{width:17px;height:17px;stroke:#d4789a;fill:none;stroke-width:2;stroke-linecap:round;}
+#screen-auth .fl{margin:-4px 0 10px;text-align:right;}
+#screen-auth .fl a{font-size:12px;color:#c2537a;font-style:italic;text-decoration:none;}
+#screen-auth .ab{width:100%;height:44px;background:linear-gradient(135deg,#f06292,#e75480);border-radius:10px;border:none;cursor:pointer;font-family:'Playfair Display',serif;font-style:italic;font-size:16px;color:#fff;font-weight:500;box-shadow:0 4px 14px rgba(231,84,128,.3);transition:opacity .2s,transform .15s;}
+#screen-auth .ab:hover{opacity:.88;transform:translateY(-1px);}
+#screen-auth .sp{font-size:12px;color:#b06080;margin:10px 0 8px;font-style:italic;font-weight:300;}
+#screen-auth .si{display:flex;justify-content:center;}
+#screen-auth .si a{display:inline-flex;padding:7px;border:1.5px solid #f4b8cc;border-radius:8px;color:#c2537a;margin:0 4px;transition:background .2s,border-color .2s;text-decoration:none;}
+#screen-auth .si a:hover{background:#fde8f0;border-color:#e75480;}
+#screen-auth .si a svg{width:18px;height:18px;}
+#screen-auth .tb{position:absolute;width:100%;height:100%;top:0;left:0;pointer-events:none;}
+#screen-auth .tb::before{content:"";position:absolute;left:-250%;width:300%;height:100%;background:linear-gradient(145deg,#f48fb1,#e75480,#f06292);border-radius:150px;z-index:2;transition:left 1.8s ease-in-out;pointer-events:all;}
+#screen-auth .auth-box.active .tb::before{left:50%;}
+#screen-auth .tp-panel{position:absolute;width:50%;height:100%;color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:2;transition:.6s ease-in-out;pointer-events:all;}
+#screen-auth .tp-panel h1{font-family:'Playfair Display',serif;font-style:italic;color:#fff;font-size:26px;margin-bottom:8px;}
+#screen-auth .tpt{font-style:italic;font-size:13px;color:rgba(255,255,255,.88);margin-bottom:20px;font-weight:300;}
+#screen-auth .tp-panel.tp-left{left:0;transition-delay:1.2s;}
+#screen-auth .auth-box.active .tp-panel.tp-left{left:-50%;transition-delay:.6s;}
+#screen-auth .tp-panel.tp-right{right:-50%;transition-delay:.6s;}
+#screen-auth .auth-box.active .tp-panel.tp-right{right:0;transition-delay:1.2s;}
+#screen-auth .tp-panel .ab{width:148px;height:42px;background:transparent;border:2px solid rgba(255,255,255,.85);box-shadow:none;color:#fff;font-size:15px;}
+</style>
+<div class="auth-petals" id="auth-petals"></div>
+<button class="auth-back" onclick="showScreen('screen-landing')">← Back to home</button>
+<div class="auth-box" id="auth-container">
+  <div class="fb login">
+    <form onsubmit="return false;">
+      <h1>Login</h1>
+      <div class="ib"><input type="text" placeholder="Username" required/><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></span></div>
+      <div class="ib"><input type="password" placeholder="Password" required/><span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></div>
+      <div class="fl"><a href="#">Forgot Password?</a></div>
+      <button class="ab" onclick="doLogin(this.closest('form'))">Login</button>
+      <p class="sp">or login with social platforms</p>
+      <div class="si">
+        <a href="#"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/></svg></a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg></a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+      </div>
+    </form>
+  </div>
+  <div class="fb register">
+    <form onsubmit="return false;">
+      <h1>Registration</h1>
+      <div class="ib"><input type="text" placeholder="Username" required/><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></span></div>
+      <div class="ib"><input type="email" placeholder="Email" required/><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="m2 7 10 7 10-7"/></svg></span></div>
+      <div class="ib"><input type="password" placeholder="Password" required/><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span></div>
+      <button class="ab" onclick="doLogin(this.closest('form'))">Register</button>
+      <p class="sp">or register with social platforms</p>
+      <div class="si">
+        <a href="#"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/></svg></a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg></a>
+        <a href="#"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+      </div>
+    </form>
+  </div>
+  <div class="tb">
+    <div class="tp-panel tp-left"><h1>Hello, Welcome!</h1><p class="tpt">Don't have an account?</p><button class="ab" id="auth-reg-btn">Register</button></div>
+    <div class="tp-panel tp-right"><h1>Welcome Back!</h1><p class="tpt">Already have an account?</p><button class="ab" id="auth-login-btn">Login</button></div>
+  </div>
+</div>
+<script>
+(function(){
+  var ac=document.getElementById('auth-container');
+  document.getElementById('auth-reg-btn').addEventListener('click',function(){ac.classList.add('active');});
+  document.getElementById('auth-login-btn').addEventListener('click',function(){ac.classList.remove('active');});
+  var cols=['#f9a8c9','#f48fb1','#fce4ec','#f8bbd0','#f06292','#ff80ab','#ffd6e7','#ffb3c6'];
+  var canvas=document.getElementById('auth-petals');
+  for(var i=0;i<22;i++){
+    var el=document.createElement('div');el.className='auth-petal';
+    var size=11+Math.random()*14,lp=Math.random()*100,dur=5+Math.random()*9,delay=-(Math.random()*14);
+    el.style.cssText='left:'+lp+'%;width:'+size+'px;height:'+(size*1.5)+'px;background:'+cols[i%8]+';animation-duration:'+dur+'s;animation-delay:'+delay+'s;';
+    canvas.appendChild(el);
+    (function(e,base,sway){var t=Math.random()*Math.PI*2;function step(){t+=0.016;e.style.left=(base+Math.sin(t)*sway/8.2)+'%';requestAnimationFrame(step);}step();})(el,lp,12+Math.random()*18);
+  }
+})();
+</script>
+</div>
+
+<!-- ══════════════════════════════════════════
+     FLOATING AI CHAT PANEL
+══════════════════════════════════════════ -->
+<div id="fab-panel" style="display:none;position:fixed;bottom:100px;right:30px;z-index:1000;width:360px;background:#fff;border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,.18),0 4px 16px rgba(155,127,232,.15);overflow:hidden;font-family:'DM Sans',sans-serif;">
+  <div style="background:linear-gradient(135deg,#e8617a,#9b7fe8);padding:18px 20px 16px;display:flex;align-items:center;gap:12px;position:relative;">
+    <div style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🌙</div>
+    <div style="flex:1"><div style="color:#fff;font-weight:600;font-size:15px;">Health Assistant AI</div><div style="display:flex;align-items:center;gap:5px;margin-top:2px;"><div style="width:7px;height:7px;border-radius:50%;background:#a8f0b0;"></div><span style="color:rgba(255,255,255,.8);font-size:11px;">Online · Cycle-aware</span></div></div>
+    <div style="display:flex;gap:6px;">
+      <button onclick="clearFabChat()" style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15);border:none;cursor:pointer;color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;">🗑</button>
+      <button onclick="toggleFabPanel()" style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15);border:none;cursor:pointer;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+    <div style="position:absolute;top:-20px;right:40px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none;"></div>
+  </div>
+  <div style="background:#fdf4f6;border-bottom:1px solid #f0e6f0;padding:9px 18px;display:flex;align-items:center;gap:8px;"><span style="font-size:13px;">🌸</span><span style="font-size:12px;color:#a060b0;font-weight:500;">Day 14 · Follicular Phase</span><span style="margin-left:auto;font-size:11px;color:#c090c0;">Ovulation in 3 days</span></div>
+  <div id="fab-msgs" style="height:290px;overflow-y:auto;padding:16px;background:#fafafa;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth;">
+    <div class="fab-msg-ai"><div class="fab-av-ai">🌙</div><div><div class="fab-bubble-ai" id="fab-welcome-msg">Hi there! 🌸 I'm your Health Assistant. How can I help today?</div><div class="fab-time">Just now</div></div></div>
+  </div>
+  <div id="fab-suggestions" style="padding:10px 14px;background:#fff;border-top:1px solid #f0eaf5;display:flex;gap:6px;flex-wrap:wrap;">
+    <button class="fab-sugg" onclick="fabQuick(this,'Why am I so energetic today?')">⚡ Energy?</button>
+    <button class="fab-sugg" onclick="fabQuick(this,'What should I eat this week?')">🥗 Diet?</button>
+    <button class="fab-sugg" onclick="fabQuick(this,'When is my ovulation?')">🌿 Ovulation?</button>
+    <button class="fab-sugg" onclick="fabQuick(this,'Help me with cramps')">🔥 Cramps?</button>
+  </div>
+  <div style="padding:12px 14px 14px;background:#fff;display:flex;gap:9px;align-items:flex-end;">
+    <textarea id="fab-input" placeholder="Ask anything…" rows="1" style="flex:1;border:1.5px solid #e8dff0;border-radius:14px;padding:10px 14px;font-size:13px;font-family:'DM Sans',sans-serif;color:#3d2a4a;background:#fdf8ff;outline:none;resize:none;line-height:1.4;transition:border-color .2s;" onfocus="this.style.borderColor='#9b7fe8'" onblur="this.style.borderColor='#e8dff0'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendFabMsg()}"></textarea>
+    <button onclick="sendFabMsg()" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#e8617a,#9b7fe8);border:none;cursor:pointer;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(155,127,232,.35);flex-shrink:0;transition:transform .2s;" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">↑</button>
+  </div>
+  <div style="padding:8px 16px 12px;background:#fff;text-align:center;border-top:1px solid #f5f0fa;"><span style="font-size:10.5px;color:#c0aad0;">✦ Powered by Health Assistant AI</span></div>
+</div>
+<div id="fab-btn-wrap" style="position:fixed;bottom:30px;right:30px;z-index:1001;">
+  <div style="position:absolute;inset:-6px;border-radius:50%;border:1.5px solid rgba(155,127,232,.4);animation:fabPing 2.8s ease-out infinite;pointer-events:none;"></div>
+  <div style="position:absolute;inset:-10px;border-radius:50%;background:radial-gradient(circle,rgba(155,127,232,.25),transparent 70%);pointer-events:none;"></div>
+  <button onclick="toggleFabPanel()" style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#e8617a,#9b7fe8);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 28px rgba(155,127,232,.45);animation:fabFloat 3.5s ease-in-out infinite;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><span style="font-size:22px;color:white;animation:fabSpin 8s linear infinite;">✦</span></button>
+  <div id="fab-badge" style="position:absolute;top:-2px;right:-2px;width:16px;height:16px;background:#e8617a;border:2px solid #fff;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;">1</div>
+</div>
+<style>
+@keyframes fabFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes fabSpin{0%{transform:rotate(0deg) scale(1)}50%{transform:rotate(180deg) scale(1.15)}100%{transform:rotate(360deg) scale(1)}}
+@keyframes fabPing{0%{transform:scale(1);opacity:.65}100%{transform:scale(1.9);opacity:0}}
+@keyframes panelIn{from{opacity:0;transform:translateY(20px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes panelOut{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(16px) scale(.95)}}
+@keyframes fabMsgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+#fab-msgs::-webkit-scrollbar{width:4px;}
+#fab-msgs::-webkit-scrollbar-thumb{background:#e0d0f0;border-radius:4px;}
+.fab-msg-ai{display:flex;align-items:flex-start;gap:9px;animation:fabMsgIn .3s ease;}
+.fab-av-ai{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#e8617a,#9b7fe8);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;box-shadow:0 2px 8px rgba(155,127,232,.25);}
+.fab-bubble-ai{background:#fff;border:1px solid #f0e6f5;border-radius:4px 16px 16px 16px;padding:10px 13px;font-size:13px;color:#3d2a4a;line-height:1.55;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.fab-msg-user{display:flex;align-items:flex-start;gap:9px;justify-content:flex-end;animation:fabMsgIn .3s ease;}
+.fab-av-user{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,rgba(232,97,122,.2),rgba(155,127,232,.2));border:1.5px solid #d0b0e0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#9b7fe8;flex-shrink:0;}
+.fab-bubble-user{background:linear-gradient(135deg,rgba(232,97,122,.12),rgba(155,127,232,.15));border:1px solid rgba(155,127,232,.2);border-radius:16px 4px 16px 16px;padding:10px 13px;font-size:13px;color:#3d2a4a;line-height:1.55;}
+.fab-time{font-size:10px;color:#c0aad0;margin-top:4px;padding:0 2px;}
+.fab-typing{display:flex;align-items:flex-start;gap:9px;animation:fabMsgIn .3s ease;}
+.fab-tdots{background:#fff;border:1px solid #f0e6f5;border-radius:4px 16px 16px 16px;padding:12px 16px;display:flex;gap:4px;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.fab-tdots span{width:7px;height:7px;border-radius:50%;background:#c0a0d0;animation:fabDot 1.2s ease-in-out infinite;}
+.fab-tdots span:nth-child(2){animation-delay:.2s;}
+.fab-tdots span:nth-child(3){animation-delay:.4s;}
+@keyframes fabDot{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-5px);opacity:1}}
+.fab-sugg{background:#f5eeff;border:1px solid #e0d0f0;border-radius:20px;padding:5px 12px;font-size:11.5px;font-family:'DM Sans',sans-serif;color:#8060b0;cursor:pointer;transition:all .18s;white-space:nowrap;}
+.fab-sugg:hover{background:#ede0ff;border-color:#c0a0e0;color:#6040a0;}
+</style>
+<script>
+var fabOpen=false;
+function toggleFabPanel(){var p=document.getElementById('fab-panel'),badge=document.getElementById('fab-badge');if(!fabOpen){p.style.display='block';p.style.animation='panelIn .35s cubic-bezier(0.34,1.56,0.64,1)';badge.style.display='none';fabOpen=true;document.getElementById('fab-input').focus();}else{p.style.animation='panelOut .25s ease forwards';setTimeout(function(){p.style.display='none';},240);fabOpen=false;}}
+var fabR={def:["I'm here to help! 💜","Great question! Every body is different 🌸","That's normal for your phase. Want to know more? ✨"],energy:"You're in follicular phase — estrogen rising = natural energy boost! 🌟 Perfect for workouts and creative projects.",food:"Focus on 🥦 leafy greens, 🐟 omega-3s, and 🫐 antioxidant berries. They support your follicular phase!",ovulation:"Ovulation predicted around <strong>March 30</strong> 🌿 — 3 days away! Watch for stretchy, clear discharge.",cramp:"Try 🌡️ heating pad, 💊 magnesium, and 🧘 light yoga. Avoid caffeine and salty foods during your period!",period:"Next period predicted around <strong>April 10</strong> 📅. Currently day 14 of 28.",sleep:"Follicular phase usually improves sleep. Aim for 7–9 hours with a consistent bedtime 😴",mood:"Follicular phase usually brings positive energy and emotional stability 🌈"};
+var fabDi=0;
+function getFabR(msg){var l=msg.toLowerCase();if(l.includes('energy')||l.includes('energetic'))return fabR.energy;if(l.includes('eat')||l.includes('food')||l.includes('diet'))return fabR.food;if(l.includes('ovulat')||l.includes('fertile'))return fabR.ovulation;if(l.includes('cramp')||l.includes('pain'))return fabR.cramp;if(l.includes('period')||l.includes('when'))return fabR.period;if(l.includes('sleep')||l.includes('tired'))return fabR.sleep;if(l.includes('mood')||l.includes('feel'))return fabR.mood;return fabR.def[fabDi++%fabR.def.length];}
+function sendFabMsg(){var inp=document.getElementById('fab-input'),msgs=document.getElementById('fab-msgs'),sugg=document.getElementById('fab-suggestions');var text=inp.value.trim();if(!text)return;inp.value='';sugg.style.display='none';var ud=document.createElement('div');ud.className='fab-msg-user';ud.innerHTML='<div style="flex:1;display:flex;flex-direction:column;align-items:flex-end;"><div class="fab-bubble-user">'+text+'</div><div class="fab-time" style="text-align:right">Just now</div></div><div class="fab-av-user">'+(window.currentUserInitial||'U')+'</div>';msgs.appendChild(ud);msgs.scrollTop=msgs.scrollHeight;var typing=document.createElement('div');typing.className='fab-typing';typing.id='fab-typing';typing.innerHTML='<div class="fab-av-ai">🌙</div><div class="fab-tdots"><span></span><span></span><span></span></div>';msgs.appendChild(typing);msgs.scrollTop=msgs.scrollHeight;setTimeout(function(){var t=document.getElementById('fab-typing');if(t)t.remove();var now=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});var ad=document.createElement('div');ad.className='fab-msg-ai';ad.innerHTML='<div class="fab-av-ai">🌙</div><div><div class="fab-bubble-ai">'+getFabR(text)+'</div><div class="fab-time">'+now+'</div></div>';msgs.appendChild(ad);msgs.scrollTop=msgs.scrollHeight;},1100+Math.random()*400);}
+function fabQuick(el,text){document.getElementById('fab-input').value=text;sendFabMsg();}
+function clearFabChat(){var msgs=document.getElementById('fab-msgs');msgs.innerHTML='';var ad=document.createElement('div');ad.className='fab-msg-ai';ad.innerHTML='<div class="fab-av-ai">🌙</div><div><div class="fab-bubble-ai">Chat cleared! How can I help today, '+(window.currentUserName||'there')+'? 🌸</div><div class="fab-time">Just now</div></div>';msgs.appendChild(ad);document.getElementById('fab-suggestions').style.display='flex';}
+setTimeout(function(){if(!fabOpen)document.getElementById('fab-badge').style.display='flex';},2500);
+</script>
+
+</body>
+</html>

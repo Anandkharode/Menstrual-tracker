@@ -1,0 +1,18 @@
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# ML Models and Data (Large/Generated files)
+ml_service/*.pkl
+ml_service/*.savedmodel/
+ml_service/model_metadata.json
+ml_service/rf_metadata.json
+ml_service/rf_scaler.pkl
+
+# Environment variables
+.env

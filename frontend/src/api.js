@@ -35,7 +35,15 @@ const apiFunctions = {
     chatMessage: async (payload) => {
         const response = await api.post('/chat/message', payload);
         return response.data;
-    }
+    },
+    mlHealth: async () => {
+        const response = await api.get('/chat/health');
+        return response.data;
+    },
+    getChatHistory: async () => {
+        const response = await api.get('/chat/history');
+        return response.data;
+    },
 };
 
 export default apiFunctions;

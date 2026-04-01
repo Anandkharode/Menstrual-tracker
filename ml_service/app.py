@@ -1,83 +1,188 @@
-from flask import Flask, request, jsonify
-import numpy as np
-from tensorflow.keras.models import load_model
-from sklearn.preprocessing import MinMaxScaler
-from datetime import datetime, timedelta
+import os
+import subprocess
+import sys
+import traceback
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
-# Load trained model (no compile needed for prediction)
-model = load_model("cycle_lstm_model.h5", compile=False)
-
-# Dummy scaler fitting (for demo; real project saves scalers)
-scaler_X = MinMaxScaler()
-scaler_y = MinMaxScaler()
-
-X_dummy = np.array([
-    [28, 29, 27, 28, 28],
-    [30, 31, 29, 30, 31],
-    [27, 28, 27, 26, 28],
-    [29, 30, 29, 30, 31],
-    [28, 28, 29, 28, 29],
-    [31, 32, 30, 31, 32]
-])
-y_dummy = np.array([28, 32, 27, 31, 29, 33])
-
-scaler_X.fit(X_dummy)
-scaler_y.fit(y_dummy.reshape(-1, 1))
+from predict import clear_model_cache, predict as predict_cycle, predict_anomaly_only
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# /predict — Full LSTM + RF ensemble prediction
+# ─────────────────────────────────────────────────────────────────────────────
 @app.route("/predict", methods=["POST"])
 def predict():
-    data = request.get_json()
-    cycles = data.get("cycles", [])
+    data = request.get_json(silent=True) or {}
+    cycles = data.get("cycles") or data.get("user_history") or []
 
-    if len(cycles) == 0:
-        return jsonify({ "error": "No cycles provided" }), 400
+    try:
+        result = predict_cycle(cycles)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except FileNotFoundError as exc:
+        return jsonify({"error": str(exc)}), 500
+    except Exception as exc:
+        print("[predict] Unhandled exception")
+        traceback.print_exc()
+        return jsonify({"error": f"Prediction failed: {exc}"}), 500
 
-    # Extract available durations
-    durations = [c["duration"] for c in cycles]
-    
-    # Pad if less than 5
-    if len(durations) < 5:
-        # Simple padding strategy: repeat the last clear pattern or mean
-        # Let's repeat the sequence until we have at least 5
-        while len(durations) < 5:
-            durations = [durations[i % len(durations)] for i in range(len(durations) * 2)]
-            
-    # Take the last 5
-    durations = durations[-5:]
+    return jsonify(result)
 
-    X_input = np.array([durations])
-    X_scaled = scaler_X.transform(X_input).reshape(1, 5, 1)
 
-    # Predict
-    pred_scaled = model.predict(X_scaled)
-    predicted_length = scaler_y.inverse_transform(pred_scaled)[0][0]
+# ─────────────────────────────────────────────────────────────────────────────
+# /anomaly/detect — RF-only fast anomaly detection (no LSTM needed)
+# ─────────────────────────────────────────────────────────────────────────────
+@app.route("/anomaly/detect", methods=["POST"])
+def anomaly_detect():
+    """
+    Standalone Random Forest anomaly detection endpoint.
+    Faster than /predict — only detects anomalies, no cycle/symptom predictions.
 
-    # Calculate next period date
-    last_start = datetime.fromisoformat(cycles[-1]["startDate"])
-    next_start = last_start + timedelta(days=int(round(predicted_length)))
+    Request body:
+      {
+        "cycles": [ { "LengthofCycle": 28, "LengthofMenses": 5, ... }, ... ]
+      }
+
+    Response:
+      {
+        "anomaly": true|false,
+        "overall_rf_probability": 0.73,
+        "per_cycle": [...],
+        "num_cycles_analyzed": 3,
+        "model": "RandomForest + IsolationForest"
+      }
+    """
+    data = request.get_json(silent=True) or {}
+    cycles = data.get("cycles") or data.get("user_history") or []
+
+    if not cycles:
+        return jsonify({"error": "No cycle data provided."}), 400
+
+    try:
+        result = predict_anomaly_only(cycles)
+    except RuntimeError as exc:
+        return jsonify({"error": str(exc)}), 503
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception as exc:
+        print("[anomaly_detect] Unhandled exception")
+        traceback.print_exc()
+        return jsonify({"error": f"Anomaly detection failed: {exc}"}), 500
+
+    return jsonify(result)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# /retrain — Retrain LSTM (and optionally RF)
+# ─────────────────────────────────────────────────────────────────────────────
+@app.route("/retrain", methods=["POST"])
+def retrain():
+    data = request.get_json(silent=True) or {}
+    model_type = data.get("model", "lstm").lower()  # "lstm", "rf", or "all"
+
+    results = {}
+    errors = {}
+
+    # ── Retrain LSTM ──
+    if model_type in ("lstm", "all"):
+        lstm_script = os.path.join(os.path.dirname(__file__), "train_model.py")
+        if not os.path.exists(lstm_script):
+            errors["lstm"] = "train_model.py not found."
+        else:
+            try:
+                res = subprocess.run(
+                    [sys.executable, lstm_script],
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                    cwd=os.path.dirname(__file__),
+                )
+                results["lstm"] = {"status": "retrained", "stdout": res.stdout.strip()}
+            except subprocess.CalledProcessError as exc:
+                errors["lstm"] = exc.stderr.strip()
+            except Exception as exc:
+                errors["lstm"] = str(exc)
+
+    # ── Retrain RF ──
+    if model_type in ("rf", "all"):
+        rf_script = os.path.join(os.path.dirname(__file__), "rf_anomaly_model.py")
+        if not os.path.exists(rf_script):
+            errors["rf"] = "rf_anomaly_model.py not found."
+        else:
+            try:
+                res = subprocess.run(
+                    [sys.executable, rf_script],
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                    cwd=os.path.dirname(__file__),
+                )
+                results["rf"] = {"status": "retrained", "stdout": res.stdout.strip()}
+            except subprocess.CalledProcessError as exc:
+                errors["rf"] = exc.stderr.strip()
+            except Exception as exc:
+                errors["rf"] = str(exc)
+
+    # Clear caches after any retraining
+    clear_model_cache()
+
+    if errors and not results:
+        return jsonify({"error": "Retraining failed.", "details": errors}), 500
 
     return jsonify({
-        "predictedCycleLength": int(round(predicted_length, 2)),
-        "predictedStart": next_start.isoformat(),
-        "confidence": float(0.85),
-        "anomaly": bool(False)
+        "status": "done",
+        "results": results,
+        "errors": errors if errors else None,
     })
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# /nlp/query — Simple NLP chatbot
+# ─────────────────────────────────────────────────────────────────────────────
 @app.route("/nlp/query", methods=["POST"])
 def nlp_query():
     data = request.get_json()
     message = data.get("message", "").lower()
-    
-    if "period" in message or "cycle" in message:
-        return jsonify({ "reply": "Your cycle data helps us predict your next period. Check the dashboard!" })
+
+    if "anomaly" in message or "irregular" in message or "unusual" in message:
+        return jsonify({
+            "reply": "I can detect cycle anomalies using both LSTM and Random Forest models. "
+                     "Submit your cycle data to /anomaly/detect for a quick RF check!"
+        })
+    elif "period" in message or "cycle" in message:
+        return jsonify({"reply": "Your cycle data helps us predict your next period. Check the dashboard!"})
     elif "symptom" in message or "pain" in message:
-        return jsonify({ "reply": "Tracking symptoms is key to understanding your health pattern." })
+        return jsonify({"reply": "Tracking symptoms is key to understanding your health pattern."})
     else:
-        return jsonify({ "reply": "I'm here to help with your menstrual health tracking." })
+        return jsonify({"reply": "I'm here to help with your menstrual health tracking."})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# /health — Model status endpoint
+# ─────────────────────────────────────────────────────────────────────────────
+@app.route("/health", methods=["GET"])
+def health():
+    base_dir = os.path.dirname(__file__)
+    lstm_ok = any(
+        os.path.exists(os.path.join(base_dir, p))
+        for p in ["menstrual_lstm_model.h5", "menstrual_lstm_model.keras"]
+    )
+    rf_ok = all(
+        os.path.exists(os.path.join(base_dir, p))
+        for p in ["rf_anomaly_model.pkl", "rf_scaler.pkl", "rf_isolation_forest.pkl"]
+    )
+    return jsonify({
+        "status": "ok",
+        "models": {
+            "lstm": "available" if lstm_ok else "missing",
+            "random_forest": "available" if rf_ok else "not trained yet — run rf_anomaly_model.py",
+        },
+        "anomaly_detection": "LSTM+RF ensemble" if (lstm_ok and rf_ok) else (
+            "LSTM only" if lstm_ok else "unavailable"
+        ),
+    })
 
 
 if __name__ == "__main__":

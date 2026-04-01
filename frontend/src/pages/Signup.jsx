@@ -17,7 +17,7 @@ export default function Signup() {
     setLoading(true);
     try {
       await api.register(form);
-      navigate("/");
+      navigate("/login");
     } catch (err) {
       setError(err.response?.data?.msg || "Registration failed");
     } finally {
@@ -101,7 +101,7 @@ export default function Signup() {
 
           <p style={styles.footer}>
             Already have an account?{" "}
-            <button onClick={() => navigate("/")} style={styles.link}>
+            <button onClick={() => navigate("/login")} style={styles.link}>
               Login
             </button>
           </p>
