@@ -8,8 +8,17 @@ export const AuthProvider = ({ children }) => {
   const [name, setName] = useState(localStorage.getItem("name") || null);
 
   useEffect(() => {
-    localStorage.setItem("token", token || "");
-    localStorage.setItem("name", name || "");
+    if (token) {
+      localStorage.setItem("token", token);
+    } else {
+      localStorage.removeItem("token");
+    }
+
+    if (name) {
+      localStorage.setItem("name", name);
+    } else {
+      localStorage.removeItem("name");
+    }
   }, [token, name]);
 
   return (

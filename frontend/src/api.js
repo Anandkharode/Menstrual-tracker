@@ -32,6 +32,18 @@ const apiFunctions = {
         const response = await api.post('/cycles', payload);
         return response.data;
     },
+    getCycles: async () => {
+        const response = await api.get('/cycles');
+        return response.data;
+    },
+    deleteCycle: async (id) => {
+        const response = await api.delete(`/cycles/${id}`);
+        return response.data;
+    },
+    postSymptoms: async (payload) => {
+        const response = await api.post('/symptoms', payload);
+        return response.data;
+    },
     chatMessage: async (payload) => {
         const response = await api.post('/chat/message', payload);
         return response.data;

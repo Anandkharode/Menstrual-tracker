@@ -25,6 +25,7 @@ app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/cycles", require("./routes/cycleRoutes"));
 app.use("/api/predictions", require("./routes/predictionRoutes"));
 app.use("/api/chat", require("./routes/chatRoutes"));
+app.use("/api/symptoms", require("./routes/symptomRoutes"));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

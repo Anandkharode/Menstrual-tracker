@@ -45,7 +45,20 @@ async function createCycle(req, res) {
         }];
 
         const mlRespFull = await axios.post(`${process.env.ML_URL}/predict`, { cycles: allCycles });
-        prediction = mlRespFull.data;
+        
+        const now = new Date(startDate);
+        const cycleLengthDays = mlRespFull.data.next_cycle_length_days || 28;
+        
+        prediction = {
+           predictedStart: new Date(now.getTime() + cycleLengthDays * 24 * 60 * 60 * 1000).toISOString(),
+           ovulationWindow: {
+              from: new Date(now.getTime() + (cycleLengthDays / 2 - 2) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              to: new Date(now.getTime() + (cycleLengthDays / 2 + 2) * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+           },
+           confidence: 0.85,
+           anomaly: mlRespFull.data.anomaly || false
+        };
+
       } catch (err) {
         console.warn("ML service call failed or insufficient data:", err.message);
       }
@@ -53,27 +66,16 @@ async function createCycle(req, res) {
 
     if (!prediction) {
       const now = new Date(startDate);
-      // Fallback logic
+      // Fallback logic uses 28 days for cycle length, NOT bleeding duration
       prediction = {
-        predictedStart: new Date(now.getTime() + (duration || 28) * 24 * 60 * 60 * 1000).toISOString(),
+        predictedStart: new Date(now.getTime() + 28 * 24 * 60 * 60 * 1000).toISOString(),
         ovulationWindow: {
-          from: new Date(now.getTime() + ((duration || 28) / 2 - 2) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          to: new Date(now.getTime() + ((duration || 28) / 2 + 2) * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+          from: new Date(now.getTime() + (28 / 2 - 2) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          to: new Date(now.getTime() + (28 / 2 + 2) * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
         },
         confidence: 0.75,
         anomaly: false
       };
-    } else {
-        // Ensure ovulationWindow exists if ML didn't return it
-        if (!prediction.ovulationWindow) {
-             const pStart = new Date(prediction.predictedStart);
-             // Estimate ovulation ~14 days before next period
-             const ovulationDate = new Date(pStart.getTime() - 14 * 24 * 60 * 60 * 1000);
-             prediction.ovulationWindow = {
-                 from: new Date(ovulationDate.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                 to: new Date(ovulationDate.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-             };
-        }
     }
 
     const savedPred = await Prediction.create({
@@ -106,7 +108,24 @@ async function getCycles(req, res) {
   }
 }
 
+async function deleteCycle(req, res) {
+  try {
+    const cycleId = req.params.id;
+    const userId = req.user.id;
+    // ensure the cycle exists and belongs to user
+    const cycle = await Cycle.findOneAndDelete({ _id: cycleId, userId });
+    if (!cycle) {
+      return res.status(404).json({ msg: "Cycle not found" });
+    }
+    return res.json({ msg: "Cycle deleted successfully" });
+  } catch (err) {
+    console.error("deleteCycle error:", err);
+    return res.status(500).json({ msg: "Server error", error: err.message });
+  }
+}
+
 module.exports = {
   createCycle,
-  getCycles
+  getCycles,
+  deleteCycle
 };

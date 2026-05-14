@@ -6,3 +6,67 @@ body,
   height: 100%;
   margin: 0;
 }
+
+/* ══ Auth page petal fall animation ══ */
+@keyframes authFall {
+  0% {
+    transform: translateY(-50px) rotate(0deg);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.65;
+  }
+  90% {
+    opacity: 0.45;
+  }
+  100% {
+    transform: translateY(700px) rotate(420deg);
+    opacity: 0;
+  }
+}
+
+/* ══ Landing page animations ══ */
+@keyframes lnFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-22px) scale(1.04); }
+}
+
+@keyframes lnPulse {
+  0%, 100% {
+    box-shadow: 0 10px 30px rgba(167,139,250,.5), 0 0 0 0 rgba(167,139,250,.3);
+  }
+  50% {
+    box-shadow: 0 14px 36px rgba(167,139,250,.6), 0 0 0 10px rgba(167,139,250,0);
+  }
+}
+
+@keyframes lnBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
+}
+
+@keyframes lnBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+
+@keyframes lnUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ══ Dashboard animations ══ */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes bounceTyping {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
