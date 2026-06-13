@@ -7,6 +7,7 @@ const ChatLogSchema = new mongoose.Schema({
   response:  { type: String, required: true },
   intent:    { type: String, default: "UNKNOWN" },     // detected intent label
   mlUsed:    { type: Boolean, default: false },         // whether ML service was called
+  grokUsed:  { type: Boolean, default: false },         // whether Grok AI generated the reply
   timestamp: { type: Date, default: Date.now },
 });
 

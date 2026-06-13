@@ -56,6 +56,18 @@ const apiFunctions = {
         const response = await api.get('/chat/history');
         return response.data;
     },
+    getProfile: async () => {
+        const response = await api.get('/users/profile');
+        return response.data;
+    },
+    updateProfile: async (payload) => {
+        const response = await api.put('/users/profile', payload);
+        return response.data;
+    },
+    getHealthProfile: async () => {
+        const response = await api.get('/chat/health-profile');
+        return response.data;
+    },
 };
 
 export default apiFunctions;

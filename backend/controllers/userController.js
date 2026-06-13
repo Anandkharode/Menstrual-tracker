@@ -32,7 +32,29 @@ exports.loginUser = async (req, res) => {
     if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
-    res.json({ token, name: user.name });
+    res.json({ token, name: user.name, onboardingCompleted: user.onboardingCompleted });
+  } catch (err) {
+    res.status(500).json({ msg: "Server error", error: err.message });
+  }
+};
+
+
+exports.getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-passwordHash");
+    if (!user) return res.status(404).json({ msg: "User not found" });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ msg: "Server error", error: err.message });
+  }
+};
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const updates = req.body;
+    updates.onboardingCompleted = true; // Mark as completed when updated
+    const user = await User.findByIdAndUpdate(req.user.id, updates, { new: true }).select("-passwordHash");
+    res.json({ msg: "Profile updated", user });
   } catch (err) {
     res.status(500).json({ msg: "Server error", error: err.message });
   }

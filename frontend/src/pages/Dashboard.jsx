@@ -118,7 +118,7 @@ function CalendarStrip() {
 }
 
 /* ── Quick-log symptoms ── */
-function QuickSymptoms() {
+function QuickSymptoms({ onSave }) {
   const symptoms = [
     { emoji: "🤕", label: "Cramps" },
     { emoji: "😴", label: "Fatigue" },
@@ -136,27 +136,37 @@ function QuickSymptoms() {
   };
 
   return (
-    <div className="flex flex-wrap gap-2">
-      {symptoms.map((s) => (
-        <button
-          key={s.label}
-          onClick={() => toggle(s.label)}
-          className="flex items-center gap-1.5 px-3 py-[7px] rounded-full text-[12px] border-none cursor-pointer transition-all"
-          style={{
-            background: selected.includes(s.label)
-              ? "linear-gradient(135deg, rgba(232,97,122,0.2), rgba(155,127,232,0.15))"
-              : "rgba(255,255,255,0.04)",
-            color: selected.includes(s.label) ? "#e8617a" : "rgba(240,234,248,0.55)",
-            border: selected.includes(s.label)
-              ? "1px solid rgba(232,97,122,0.3)"
-              : "1px solid rgba(255,255,255,0.06)",
-            fontFamily: "'DM Sans', sans-serif",
-          }}
-        >
-          <span className="text-[14px]">{s.emoji}</span>
-          {s.label}
-        </button>
-      ))}
+    <div>
+      <div className="flex flex-wrap gap-2 mb-4">
+        {symptoms.map((s) => (
+          <button
+            key={s.label}
+            onClick={() => toggle(s.label)}
+            className="flex items-center gap-1.5 px-3 py-[7px] rounded-full text-[12px] border-none cursor-pointer transition-all"
+            style={{
+              background: selected.includes(s.label)
+                ? "linear-gradient(135deg, rgba(232,97,122,0.2), rgba(155,127,232,0.15))"
+                : "rgba(255,255,255,0.04)",
+              color: selected.includes(s.label) ? "#e8617a" : "rgba(240,234,248,0.55)",
+              border: selected.includes(s.label)
+                ? "1px solid rgba(232,97,122,0.3)"
+                : "1px solid rgba(255,255,255,0.06)",
+              fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            <span className="text-[14px]">{s.emoji}</span>
+            {s.label}
+          </button>
+        ))}
+      </div>
+      <button
+        onClick={() => onSave(selected)}
+        disabled={selected.length === 0}
+        className="px-4 py-2 rounded-xl text-[12px] font-medium transition-all cursor-pointer border-none disabled:opacity-50"
+        style={{ background: "rgba(255,255,255,0.1)", color: "#f0eaf8" }}
+      >
+        Log Symptoms for Today
+      </button>
     </div>
   );
 }
@@ -169,6 +179,7 @@ export default function Dashboard() {
   const [prediction, setPrediction] = useState(null);
   const [latestCycle, setLatestCycle] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [popupData, setPopupData] = useState(null); // stores { prediction, suggestion }
 
   useEffect(() => {
     (async () => {
@@ -192,6 +203,29 @@ export default function Dashboard() {
   const cycleDay = latestCycle?.startDate 
     ? Math.max(1, Math.floor((new Date() - new Date(latestCycle.startDate)) / 86400000) + 1)
     : null;
+
+  const handleSaveSymptoms = async (selectedSymptoms) => {
+    try {
+      // Create cycle record for today without duration, just symptoms
+      const res = await api.postCycle({
+        startDate: new Date().toISOString().split('T')[0],
+        symptoms: selectedSymptoms.join(', '),
+      });
+      // Set prediction and generate a suggestion
+      const pred = res.prediction;
+      let suggestion = "Take some rest and stay hydrated.";
+      if (pred?.anomaly) {
+        suggestion = "Your cycle shows irregular patterns. Consider taking extra rest and consulting your healthcare provider if you feel unwell.";
+      } else if (pred?.predictedStart) {
+        suggestion = `Your next period is predicted around ${fmtDate(pred.predictedStart, { month: "short", day: "numeric" })}. Plan your days accordingly and take rest from past predictions.`;
+      }
+
+      setPopupData({ ...pred, suggestion });
+    } catch (err) {
+      console.error("Error saving symptoms:", err);
+      alert("Failed to save symptoms.");
+    }
+  };
 
   const greeting = () => {
     const h = new Date().getHours();
@@ -251,7 +285,7 @@ export default function Dashboard() {
             <h3 className="text-[14px] font-medium mb-4" style={{ color: "#f0eaf8" }}>
               How are you feeling today?
             </h3>
-            <QuickSymptoms />
+            <QuickSymptoms onSave={handleSaveSymptoms} />
           </div>
         </div>
       </div>
@@ -392,6 +426,43 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Suggestion Popup */}
+      {popupData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div 
+            className="rounded-2xl p-6 max-w-[400px] w-full"
+            style={{ background: "#16111f", border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 10px 40px rgba(0,0,0,0.5)" }}
+          >
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-[18px] font-semibold" style={{ color: "#f0eaf8" }}>✨ Personalized Suggestion</h3>
+              <button 
+                onClick={() => setPopupData(null)}
+                className="bg-transparent border-none text-[16px] cursor-pointer"
+                style={{ color: "rgba(240,234,248,0.5)" }}
+              >
+                ✕
+              </button>
+            </div>
+            <p className="text-[14px] leading-relaxed mb-6" style={{ color: "rgba(240,234,248,0.7)" }}>
+              {popupData.suggestion}
+            </p>
+            {popupData.anomaly && (
+               <div className="mb-4 rounded-xl p-3 flex items-start gap-2" style={{ background: "rgba(232,97,122,0.1)", border: "1px solid rgba(232,97,122,0.25)" }}>
+                 <span className="text-[14px]">⚠️</span>
+                 <span className="text-[12px] font-medium" style={{ color: "#e8617a" }}>Anomaly Detected in Pattern</span>
+               </div>
+            )}
+            <button
+              onClick={() => setPopupData(null)}
+              className="w-full py-3 rounded-xl text-[13px] font-medium text-white border-none cursor-pointer"
+              style={{ background: "linear-gradient(135deg, #e8617a, #9b7fe8)" }}
+            >
+              Got it, thanks!
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

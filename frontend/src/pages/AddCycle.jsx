@@ -103,7 +103,7 @@ export default function AddCycle() {
               type="number"
               value={form.duration}
               onChange={(e) => setForm({ ...form, duration: e.target.value })}
-              min="1" max="15" required placeholder="e.g., 5"
+              min="1" max="15" placeholder="e.g., 5"
               className="w-full px-4 py-3 rounded-xl text-[13px] outline-none transition-all"
               style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#f0eaf8" }}
             />

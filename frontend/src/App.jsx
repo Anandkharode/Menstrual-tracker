@@ -25,15 +25,20 @@ function ProtectedRoute({ children }) {
   return token ? children : <Navigate to="/login" replace />;
 }
 
+function GuestRoute({ children }) {
+  const { token } = useContext(AuthContext);
+  return token ? <Navigate to="/dashboard" replace /> : children;
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<AuthPage initialMode="login" />} />
-          <Route path="/signup" element={<AuthPage initialMode="signup" />} />
+          <Route path="/" element={<GuestRoute><LandingPage /></GuestRoute>} />
+          <Route path="/login" element={<GuestRoute><AuthPage initialMode="login" /></GuestRoute>} />
+          <Route path="/signup" element={<GuestRoute><AuthPage initialMode="signup" /></GuestRoute>} />
 
           {/* Protected Main Dashboard App Shell */}
           <Route
