@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import ChatbotWidget from "../components/ChatbotWidget";
 import OnboardingModal from "../components/OnboardingModal";
+import { ChatAssistantProvider } from "../context/ChatAssistantContext";
 import api from "../api";
 
 export default function AppShell() {
@@ -27,19 +28,21 @@ export default function AppShell() {
 
   return (
     <div className="flex h-screen" style={{ background: "#0d0a14" }}>
-      {/* Sidebar */}
-      <Sidebar />
+      <ChatAssistantProvider>
+        {/* Sidebar */}
+        <Sidebar />
 
-      {/* Main Content */}
-      <main
-        className="flex-1 overflow-y-auto"
-        style={{ background: "#0d0a14" }}
-      >
-        <Outlet />
-      </main>
+        {/* Main Content */}
+        <main
+          className="flex-1 overflow-y-auto"
+          style={{ background: "#0d0a14" }}
+        >
+          <Outlet />
+        </main>
 
-      {/* Floating Chatbot */}
-      <ChatbotWidget />
+        {/* Floating Chatbot */}
+        <ChatbotWidget />
+      </ChatAssistantProvider>
 
       {/* Onboarding Modal */}
       {!loading && showOnboarding && (
