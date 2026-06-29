@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { playNotificationPing, unlockAudio } from "../utils/sounds";
+import api from "../api";
 
 const initialNotifications = [
   {
@@ -159,7 +160,81 @@ export default function Notifications() {
       }, 600);
       return () => clearTimeout(t);
     }
-  }, []); // eslint-disable-line
+  }, [unreadCount]); // Re-evaluate when unreadCount changes
+
+  // Fetch cycles to generate realistic notifications
+  useEffect(() => {
+    async function fetchNotifications() {
+      try {
+        const cycles = await api.getCycles();
+        if (cycles && cycles.length > 0) {
+          const generatedNotifs = [];
+          const sorted = [...cycles].sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
+          const latestCycle = sorted[0];
+
+          // 1. New cycle logged
+          generatedNotifs.push({
+            id: 'cycle-log-' + latestCycle._id,
+            type: "system",
+            title: "Cycle Logged",
+            message: `You successfully logged a cycle starting on ${new Date(latestCycle.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}.`,
+            time: "Recently",
+            read: false,
+            icon: "✅",
+            color: "#4ecdc4",
+          });
+
+          // 2. Next period prediction
+          const nextPeriodDate = new Date(latestCycle.startDate);
+          nextPeriodDate.setDate(nextPeriodDate.getDate() + 28);
+          
+          const today = new Date();
+          const diffTime = nextPeriodDate - today;
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          
+          if (diffDays >= 0 && diffDays <= 14) {
+            generatedNotifs.push({
+              id: 'pred-' + latestCycle._id,
+              type: "period",
+              title: `Period Due in ${diffDays} Days`,
+              message: `Based on your cycle history, your next period is predicted to start on ${nextPeriodDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}.`,
+              time: "Just now",
+              read: false,
+              icon: "🩸",
+              color: "#e8617a",
+            });
+          }
+
+          // 3. Anomalies (check last completed cycle)
+          if (sorted.length > 1) {
+            const previousCycle = sorted[1];
+            const diff = (new Date(latestCycle.startDate) - new Date(previousCycle.startDate)) / (1000 * 60 * 60 * 24);
+            if (diff < 21 || diff > 35) {
+               generatedNotifs.push({
+                  id: 'anomaly-' + previousCycle._id,
+                  type: "anomaly",
+                  title: "Cycle Anomaly Detected",
+                  message: `Your previous cycle was ${Math.round(diff)} days long, which is ${diff < 21 ? 'shorter' : 'longer'} than usual.`,
+                  time: "Recently",
+                  read: true,
+                  icon: "⚠️",
+                  color: "#f4a261",
+               });
+            }
+          }
+
+          setNotifications(prev => {
+            // Keep existing static reminders (id 2 and 5) but add the dynamic ones
+            const staticReminders = initialNotifications.filter(n => n.id === 2 || n.id === 5);
+            return [...generatedNotifs, ...staticReminders];
+          });
+        }
+      } catch (err) {
+         console.error("Failed to fetch cycles for notifications", err);
+      }
+    }
+    fetchNotifications();
+  }, []);
 
   const markRead = (id) => {
     const target = notifications.find((n) => n.id === id);

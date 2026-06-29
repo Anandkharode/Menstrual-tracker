@@ -10,10 +10,12 @@ import api from "../api";
 const ChatAssistantContext = createContext(null);
 
 export const QUICK_SUGGESTIONS = [
-  { label: "Cycle history", text: "Tell me about my cycle history" },
-  { label: "Analyze symptoms", text: "Analyze my symptoms" },
-  { label: "Mood patterns", text: "How has my mood changed?" },
-  { label: "Health summary", text: "Summarize my health" },
+  { label: "😴 Tired?",       text: "Why am I feeling so tired before my period?" },
+  { label: "🍽️ What to eat?", text: "What should I eat to help with my cramps?" },
+  { label: "📅 Next period?", text: "When is my next period expected?" },
+  { label: "🌸 Ovulation?",   text: "When am I ovulating this cycle?" },
+  { label: "🔄 Regular?",    text: "Is my cycle regular or irregular?" },
+  { label: "😔 Mood?",       text: "Why do I get mood swings before my period?" },
 ];
 
 function createId() {
@@ -47,7 +49,7 @@ function getUserName() {
 function getWelcomeMessage() {
   return createMessage(
     "bot",
-    "Hi, I am your AI health assistant. Ask me about your cycle, symptoms, mood, pain, or predictions.",
+    "Hi! I'm your **Health Assistant AI** 💗\n\nI can answer questions based on your cycle history, symptoms, mood patterns, and AI predictions. Try asking me anything!",
     { time: "Just now" }
   );
 }
@@ -105,7 +107,7 @@ export function ChatAssistantProvider({ children }) {
     setMessages([
       createMessage(
         "bot",
-        `Chat cleared. How can I help you today, ${getUserName()}?`,
+        `Hi! I'm your **Health Assistant AI** 💗\n\nHow can I help you today, **${getUserName()}**?`,
         { time: "Just now" }
       ),
     ]);

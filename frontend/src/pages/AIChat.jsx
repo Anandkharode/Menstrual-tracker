@@ -4,19 +4,19 @@ import ChatAssistantPanel from "../components/ChatAssistantPanel";
 export default function AIChat() {
   return (
     <div
-      className="mx-auto flex h-full max-w-[900px] flex-col p-6 lg:p-8"
-      style={{ fontFamily: "'DM Sans', sans-serif" }}
+      style={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: "24px",
+        fontFamily: "'DM Sans', sans-serif",
+        boxSizing: "border-box",
+      }}
     >
-      <div className="mb-5">
-        <h1 className="mb-1 text-[1.5rem] font-semibold text-[#f0eaf8]">
-          AI Health Assistant
-        </h1>
-        <p className="text-[13px] text-[#8f819d]">
-          The same assistant you use from the floating chat.
-        </p>
+      {/* Full width layout for the AI page */}
+      <div style={{ width: "100%", flex: 1, display: "flex", flexDirection: "column" }}>
+        <ChatAssistantPanel pageMode />
       </div>
-
-      <ChatAssistantPanel variant="page" className="flex-1" />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api";
 import AuthContext from "../context/AuthContext";
 
@@ -176,6 +177,7 @@ function QuickSymptoms({ onSave }) {
 ══════════════════════════════════ */
 export default function Dashboard() {
   const { name } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [prediction, setPrediction] = useState(null);
   const [latestCycle, setLatestCycle] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -322,7 +324,8 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Anomaly / Insight Card */}
         <div
-          className="rounded-2xl p-6"
+          onClick={() => navigate("/dashboard/insights")}
+          className="rounded-2xl p-6 cursor-pointer hover:opacity-90 transition-opacity"
           style={{ background: "#16111f", border: "1px solid rgba(255,255,255,0.06)" }}
         >
           <h3 className="text-[14px] font-medium mb-4" style={{ color: "#f0eaf8" }}>
@@ -379,7 +382,8 @@ export default function Dashboard() {
 
         {/* AI Chat Preview */}
         <div
-          className="rounded-2xl p-6 flex flex-col"
+          onClick={() => navigate("/dashboard/ai")}
+          className="rounded-2xl p-6 flex flex-col cursor-pointer hover:opacity-90 transition-opacity"
           style={{ background: "#16111f", border: "1px solid rgba(255,255,255,0.06)" }}
         >
           <h3 className="text-[14px] font-medium mb-4" style={{ color: "#f0eaf8" }}>
